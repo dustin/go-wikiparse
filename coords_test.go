@@ -51,6 +51,12 @@ var testdata = []testinput{
 		"",
 	},
 	testinput{
+		"{{Coord|display=title|45|N|114|W|region:US-ID_type:adm1st_scale:3000000}}",
+		45,
+		-114,
+		"",
+	},
+	testinput{
 		"{{coord|97|59|16|S|86|56|40|W|invalid lat}}",
 		-97.98777777,
 		-86.94444444,
@@ -102,16 +108,19 @@ func assertEpsilon(t *testing.T, input, field string, expected, got float64) {
 func testOne(t *testing.T, ti testinput, input string) {
 	coord, err := ParseCoords(input)
 	switch {
-	case err == nil && ti.err == "":
-		// ok
+	case err != nil && ti.err == "":
+		t.Fatalf("Unexpected error on %v, got %v, wanted %q", input, err, ti.err)
 	case err != nil && strings.HasPrefix(err.Error(), ti.err):
+		// ok
+	case err == nil && ti.err == "":
 		// ok
 	case err == nil && ti.err != "":
 		t.Fatalf("Expected error %q on %v", ti.err, input)
 	default:
-		t.Fatalf("Unexpected error on %v, got %v, wanted %q", input, err, ti.err)
+		t.Fatalf("Wanted %v,%v with error %v, got %#v with error %v",
+			ti.lat, ti.lon, ti.err, coord, err)
 	}
-	t.Logf("Parsed %#v", coord)
+	t.Logf("Parsed %#v with %v", coord, err)
 	assertEpsilon(t, input, "lon", ti.lon, coord.Lon)
 	assertEpsilon(t, input, "lat", ti.lat, coord.Lat)
 	t.Logf("Results for %s:  %#v", input, coord)

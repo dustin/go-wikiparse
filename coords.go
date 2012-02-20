@@ -121,9 +121,18 @@ func ParseCoords(text string) (rv Coord, err error) {
 
 	parts := strings.Split(matches[0][1], "|")
 
-	rv, err = parseSexagesimal(parts)
+	firstnumber := 0
+	var part string
+	for firstnumber, part = range parts {
+		_, e := strconv.ParseFloat(part, 64)
+		if e == nil {
+			break
+		}
+	}
+
+	rv, err = parseSexagesimal(parts[firstnumber:])
 	if err != nil {
-		rv, err = parseFloat(parts)
+		rv, err = parseFloat(parts[firstnumber:])
 	}
 
 	if err == nil {
