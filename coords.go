@@ -121,6 +121,10 @@ func ParseCoords(text string) (rv Coord, err error) {
 
 	parts := strings.Split(matches[0][1], "|")
 
+	for i, _ := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
+	}
+
 	firstnumber := 0
 	var part string
 	for firstnumber, part = range parts {
