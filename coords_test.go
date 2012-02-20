@@ -63,6 +63,20 @@ var testdata = []testinput{
 		0,
 		"No coord data found.",
 	},
+	testinput{
+		"<!-- {{coord|27|59|16|N|86|56|40|E}} -->",
+		0,
+		0,
+		"No coord data found.",
+	},
+	testinput{
+		`<!--
+{{coord|27|59|16|N|86|56|40|E}}
+-->`,
+		0,
+		0,
+		"No coord data found.",
+	},
 }
 
 func assertEpsilon(t *testing.T, input, field string, expected, got float64) {

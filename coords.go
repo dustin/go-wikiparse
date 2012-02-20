@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var coordRE, nowikiRE *regexp.Regexp
+var coordRE, nowikiRE, commentRE *regexp.Regexp
 
 var NoCoordFound = errors.New("No coord data found.")
 
@@ -18,6 +18,7 @@ var notSexagesimal = errors.New("Not a sexagesimal value")
 func init() {
 	coordRE = regexp.MustCompile(`(?mi){{coord\|(.*)}}`)
 	nowikiRE = regexp.MustCompile(`(?ms)<nowiki>.*</nowiki>`)
+	commentRE = regexp.MustCompile(`(?ms)<!--.*-->`)
 }
 
 type Coord struct {
@@ -111,7 +112,7 @@ Parses geographical coordinates as specified in
 http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Geographical_coordinates
 */
 func ParseCoords(text string) (rv Coord, err error) {
-	cleaned := nowikiRE.ReplaceAllString(text, "")
+	cleaned := nowikiRE.ReplaceAllString(commentRE.ReplaceAllString(text, ""), "")
 	matches := coordRE.FindAllStringSubmatch(cleaned, 1)
 
 	if len(matches) == 0 || len(matches[0]) < 2 {
