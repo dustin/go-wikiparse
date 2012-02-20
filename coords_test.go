@@ -57,6 +57,12 @@ var testdata = []testinput{
 		"",
 	},
 	testinput{
+		"{{Coord|42||N|82||W|}}",
+		42,
+		-82,
+		"",
+	},
+	testinput{
 		"{{Coord|display=title|41.762736| -72.674286}}",
 		41.762736,
 		-72.674286,

@@ -107,6 +107,28 @@ func parseFloat(parts []string) (rv Coord, err error) {
 	return
 }
 
+func cleanCoordParts(in []string) []string {
+	out := make([]string, 0, len(in))
+
+	firstnumber := 0
+	var part string
+	for firstnumber, part = range in {
+		_, e := strconv.ParseFloat(part, 64)
+		if e == nil {
+			break
+		}
+	}
+
+	for _, p := range in[firstnumber:] {
+		t := strings.TrimSpace(p)
+		if t != "" {
+			out = append(out, t)
+		}
+	}
+
+	return out
+}
+
 /*
 Parses geographical coordinates as specified in
 http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Geographical_coordinates
@@ -119,24 +141,11 @@ func ParseCoords(text string) (rv Coord, err error) {
 		return Coord{}, NoCoordFound
 	}
 
-	parts := strings.Split(matches[0][1], "|")
+	parts := cleanCoordParts(strings.Split(matches[0][1], "|"))
 
-	for i, _ := range parts {
-		parts[i] = strings.TrimSpace(parts[i])
-	}
-
-	firstnumber := 0
-	var part string
-	for firstnumber, part = range parts {
-		_, e := strconv.ParseFloat(part, 64)
-		if e == nil {
-			break
-		}
-	}
-
-	rv, err = parseSexagesimal(parts[firstnumber:])
+	rv, err = parseSexagesimal(parts)
 	if err != nil {
-		rv, err = parseFloat(parts[firstnumber:])
+		rv, err = parseFloat(parts)
 	}
 
 	if err == nil {
