@@ -71,6 +71,9 @@ func ParseGeolinks(text string) (rv Geolink, err error) {
 
 	if strings.HasPrefix(latlon[0], "long=") {
 		err = fillLongLat(&rv, latlon)
+	} else if strings.HasPrefix(latlon[0], "lat=") {
+		latlon[0], latlon[1] = latlon[1], latlon[0]
+		err = fillLongLat(&rv, latlon)
 	} else {
 		err = fillLatLon(&rv, latlon)
 	}
