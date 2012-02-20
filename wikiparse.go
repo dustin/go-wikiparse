@@ -2,6 +2,7 @@ package main
 
 import (
 	"compress/bzip2"
+	"encoding/gob"
 	"encoding/xml"
 	"log"
 	"os"
@@ -11,7 +12,7 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
-var wg = sync.WaitGroup{}
+var wg, errwg sync.WaitGroup
 
 type SiteInfo struct {
 	SiteName   string `xml:"sitename"`
@@ -44,22 +45,23 @@ type Page struct {
 	Revision Revision `xml:"revision"`
 }
 
-func doPage(p *Page) {
+func doPage(p *Page, cherr chan<- *Page) {
 	defer wg.Done()
-	gl, err := ParseCoords(p.Revision.Text)
+	_, err := ParseCoords(p.Revision.Text)
 	if err == nil {
-		log.Printf("Found geo data in %q: %#v", p.Title, gl)
+		// log.Printf("Found geo data in %q: %#v", p.Title, gl)
 	} else {
 		if err != NoCoordFound {
-			log.Fatalf("Error parsing geo from %#v: %v", *p, err)
+			cherr <- p
+			log.Printf("Error parsing geo from %#v: %v", *p, err)
 		}
 	}
 
 }
 
-func pageHandler(ch <-chan *Page) {
+func pageHandler(ch <-chan *Page, cherr chan<- *Page) {
 	for p := range ch {
-		doPage(p)
+		doPage(p, cherr)
 	}
 }
 
@@ -72,6 +74,23 @@ func parsePage(d *xml.Decoder, ch chan<- *Page) error {
 	wg.Add(1)
 	ch <- &page
 	return nil
+}
+
+func errorHandler(ch <-chan *Page) {
+	defer errwg.Done()
+	f, err := os.Create("errors.gob")
+	if err != nil {
+		log.Fatalf("Error creating error file: %v", err)
+	}
+	defer f.Close()
+	g := gob.NewEncoder(f)
+
+	for p := range ch {
+		err = g.Encode(p)
+		if err != nil {
+			log.Fatalf("Error gobbing page: %v\n%#v", err, p)
+		}
+	}
 }
 
 func main() {
@@ -98,10 +117,14 @@ func main() {
 	log.Printf("Got site info:  %+v", si)
 
 	ch := make(chan *Page, 1000)
+	cherr := make(chan *Page, 10)
 
 	for i := 0; i < 8; i++ {
-		go pageHandler(ch)
+		go pageHandler(ch, cherr)
 	}
+
+	errwg.Add(1)
+	go errorHandler(cherr)
 
 	pages := int64(0)
 	start := time.Now()
@@ -120,6 +143,8 @@ func main() {
 	}
 	wg.Wait()
 	close(ch)
+	close(cherr)
+	errwg.Wait()
 	log.Printf("Ended with err after %v:  %v after %s pages",
 		time.Now().Sub(start), err, humanize.Comma(pages))
 
