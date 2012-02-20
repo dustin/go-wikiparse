@@ -7,85 +7,61 @@ import (
 
 type testinput struct {
 	input string
-	gtype string
-	scale string
-	lon   float64
 	lat   float64
+	lon   float64
 	err   string
 }
 
 var testdata = []testinput{
 	testinput{
-		"{{Geolinks-US-streetscale|34.1996350|-118.1746540}}",
-		"US", "streetscale",
-		-118.1746540,
-		34.1996350,
+		"{{coord|61.1631|-149.9721|type:landmark_globe:earth_region:US-AK_scale:150000_source:gnis|name=Kulis Air National Guard Base}}",
+		61.1631,
+		-149.9721,
 		"",
 	},
 	testinput{
-		"{{Geolinks-AUS-suburbscale|long=146.5333|lat=-38.1833}}",
-		"AUS", "suburbscale",
-		146.5333,
-		-38.1833,
+		"{{coord|29.5734571|N|2.3730469|E|scale:10000000|format=dms|display=title}}",
+		29.5734571,
+		2.3730469,
 		"",
 	},
 	testinput{
-		"{{geolinks-US-streetscale|37.2750|-81.1240|region:US_type:_scale:300000}}",
-		"US", "streetscale",
-		-81.1240,
-		37.2750,
+		"{{coord|27|59|16|N|86|56|40|E}}",
+		27.98777777,
+		86.94444444,
 		"",
 	},
 	testinput{
-		"{{Geolinks-US-buildingscale|30.325939|-87.316879}}",
-		"US", "buildingscale",
-		-87.316879,
-		30.325939,
+		"{{coord|27|59|16|S|86|56|40|E}}",
+		-27.98777777,
+		86.94444444,
 		"",
 	},
 	testinput{
-		"{{geolinks-Canada-streetscale|45.375121|-75.897846}}",
-		"Canada", "streetscale",
-		-75.897846,
-		45.375121,
+		"{{coord|27|59|16|N|86|56|40|W}}",
+		27.98777777,
+		-86.94444444,
 		"",
 	},
 	testinput{
-		"{{Geolinks-US-streetscale|39.118474|-77.235947|Kentlands (Gaithersburg, MD)}}",
-		"US", "streetscale",
-		-77.235947,
-		39.118474,
+		"{{coord|27|59|16|S|86|56|40|W}}",
+		-27.98777777,
+		-86.94444444,
 		"",
 	},
 	testinput{
-		"{{Geolinks-US-streetscale|40.94759700 |-72.89820700}}",
-		"US", "streetscale",
-		-72.89820700,
-		40.94759700,
-		"",
-	},
-	testinput{
-		"{{Geolinks-AUS-suburbscale|lat=-25.898938|long=139.351694}}",
-		"AUS", "suburbscale",
-		139.351694,
-		-25.898938,
-		"",
-	},
-	testinput{
-		"<nowiki>{{Geolinks-AUS-suburbscale|long=[LONG]|lat=[LAT]}}</nowiki>",
-		"", "",
+		"<nowiki>{{coord|27|59|16|N|86|56|40|E}}</nowiki>",
 		0,
 		0,
-		"No geolinks data found.",
+		"No coord data found.",
 	},
 	testinput{
 		`<nowiki>
-{{Geolinks-AUS-suburbscale|long=[LONG]|lat=[LAT]}}
+{{coord|27|59|16|N|86|56|40|E}}
 </nowiki>`,
-		"", "",
 		0,
 		0,
-		"No geolinks data found.",
+		"No coord data found.",
 	},
 }
 
@@ -97,41 +73,33 @@ func assertEpsilon(t *testing.T, input, field string, expected, got float64) {
 }
 
 func testOne(t *testing.T, ti testinput, input string) {
-	geo, err := ParseGeolinks(input)
+	coord, err := ParseCoords(input)
 	if err != nil && err.Error() != ti.err {
 		t.Fatalf("Unexpected error %q on %v, got %v", ti.err, input, err)
 	}
 	if err == nil && ti.err != "" {
 		t.Fatalf("Expected error on %v", input)
 	}
-	t.Logf("Parsed %#v", geo)
-	if geo.Type != ti.gtype {
-		t.Fatalf("Expected type %v for %v, got %v",
-			ti.gtype, input, geo.Type)
-	}
-	if geo.Scale != ti.scale {
-		t.Fatalf("Expected scale %v for %v, got %v",
-			ti.scale, input, geo.Scale)
-	}
-	assertEpsilon(t, input, "lon", ti.lon, geo.Lon)
-	assertEpsilon(t, input, "lat", ti.lat, geo.Lat)
-	t.Logf("Results for %s:  %#v", input, geo)
+	t.Logf("Parsed %#v", coord)
+	assertEpsilon(t, input, "lon", ti.lon, coord.Lon)
+	assertEpsilon(t, input, "lat", ti.lat, coord.Lat)
+	t.Logf("Results for %s:  %#v", input, coord)
 }
 
-func TestGeoSimple(t *testing.T) {
+func TestCoordSimple(t *testing.T) {
 	for _, ti := range testdata {
 		testOne(t, ti, ti.input)
 	}
 }
 
-func TestGeoWithGarbage(t *testing.T) {
+func TestCoordWithGarbage(t *testing.T) {
 	for _, ti := range testdata {
 		input := " some random garbage " + ti.input + " and stuff"
 		testOne(t, ti, input)
 	}
 }
 
-func TestGeoMultiline(t *testing.T) {
+func TestCoordMultiline(t *testing.T) {
 	for _, ti := range testdata {
 		input := " some random garbage\n\nnewlines\n" + ti.input + " and stuff"
 		testOne(t, ti, input)

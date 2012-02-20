@@ -9,75 +9,120 @@ import (
 	"strings"
 )
 
-var geoRE, nowikiRE *regexp.Regexp
+var coordRE, nowikiRE *regexp.Regexp
 
-var NoGeoFound = errors.New("No geolinks data found.")
+var NoCoordFound = errors.New("No coord data found.")
+
+var notSexagesimal = errors.New("Not a sexagesimal value")
 
 func init() {
-	geoRE = regexp.MustCompile(`(?mi){{geolinks-(\w+)-(\w+)\|([^}]*)}}`)
+	coordRE = regexp.MustCompile(`(?mi){{coord\|(.*)}}`)
 	nowikiRE = regexp.MustCompile(`(?ms)<nowiki>.*</nowiki>`)
 }
 
-type Geolink struct {
-	Type  string
-	Scale string
-	Lon   float64
-	Lat   float64
+type Coord struct {
+	Lon float64
+	Lat float64
 }
 
-// Fill when a simple lat/long pair
-func fillLatLon(rv *Geolink, latlon []string) error {
-	f, err := strconv.ParseFloat(latlon[0], 64)
+func dms(parts []string) (rv float64, err error) {
+	if len(parts) != 4 {
+		panic(fmt.Sprintf("Wrong number of elements: %#v", parts))
+	}
+	var f float64
+	f, err = strconv.ParseFloat(parts[0], 64)
 	if err != nil {
-		return err
+		return
 	}
-	rv.Lat = f
-
-	rv.Lon, err = strconv.ParseFloat(latlon[1], 64)
-
-	return err
-}
-
-func fillLongLat(rv *Geolink, longlat []string) error {
-	if !strings.HasPrefix(longlat[0], "long=") {
-		return errors.New("Unhandled case.")
-	}
-	if !strings.HasPrefix(longlat[1], "lat=") {
-		return errors.New("Unhandled case.")
-	}
-
-	f, err := strconv.ParseFloat(strings.Split(longlat[0], "=")[1], 64)
+	rv = f
+	f, err = strconv.ParseFloat(parts[1], 64)
 	if err != nil {
-		return err
+		return
 	}
-	rv.Lon = f
+	rv += f / 60.0
+	f, err = strconv.ParseFloat(parts[2], 64)
+	if err != nil {
+		return
+	}
+	rv += f / 3600.0
 
-	rv.Lat, err = strconv.ParseFloat(strings.Split(longlat[1], "=")[1], 64)
-	return err
+	if parts[3] == "S" || parts[3] == "W" {
+		rv = -rv
+	}
+	return
 }
 
-func ParseGeolinks(text string) (rv Geolink, err error) {
+func parseSexagesimal(parts []string) (Coord, error) {
+	if len(parts) < 8 {
+		return Coord{}, notSexagesimal
+	}
+	if parts[3] != "N" && parts[3] != "S" {
+		return Coord{}, notSexagesimal
+	}
+	if parts[7] != "E" && parts[7] != "W" {
+		return Coord{}, notSexagesimal
+	}
+
+	lat, err := dms(parts[0:4])
+	if err != nil {
+		return Coord{}, err
+	}
+
+	lon, err := dms(parts[4:8])
+
+	rv := Coord{
+		Lat: lat,
+		Lon: lon,
+	}
+
+	return rv, err
+}
+
+func parseFloat(parts []string) (rv Coord, err error) {
+	if len(parts) < 2 {
+		return Coord{}, NoCoordFound
+	}
+
+	offset := 0
+
+	rv.Lat, err = strconv.ParseFloat(parts[offset], 64)
+	if err != nil {
+		return
+	}
+	offset++
+
+	if parts[offset] == "S" {
+		rv.Lat = -rv.Lat
+		offset++
+	} else if parts[offset] == "N" {
+		offset++
+	}
+
+	rv.Lon, err = strconv.ParseFloat(parts[offset], 64)
+	offset++
+	if len(parts) > offset && parts[offset] == "W" {
+		rv.Lon = -rv.Lon
+	}
+	return
+}
+
+/*
+Parses geographical coordinates as specified in
+http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Geographical_coordinates
+*/
+func ParseCoords(text string) (rv Coord, err error) {
 	cleaned := nowikiRE.ReplaceAllString(text, "")
-	matches := geoRE.FindAllStringSubmatch(cleaned, 1)
-	if len(matches) == 0 || len(matches[0]) < 4 {
-		return rv, NoGeoFound
-	}
-	rv.Type = matches[0][1]
-	rv.Scale = matches[0][2]
-	latlon := strings.Split(matches[0][3], "|")
-	if len(latlon) < 2 {
-		return rv, NoGeoFound
-	}
-	latlon[0] = strings.TrimSpace(latlon[0])
-	latlon[1] = strings.TrimSpace(latlon[1])
+	matches := coordRE.FindAllStringSubmatch(cleaned, 1)
 
-	if strings.HasPrefix(latlon[0], "long=") {
-		err = fillLongLat(&rv, latlon)
-	} else if strings.HasPrefix(latlon[0], "lat=") {
-		latlon[0], latlon[1] = latlon[1], latlon[0]
-		err = fillLongLat(&rv, latlon)
-	} else {
-		err = fillLatLon(&rv, latlon)
+	if len(matches) == 0 || len(matches[0]) < 2 {
+		return Coord{}, NoCoordFound
+	}
+
+	parts := strings.Split(matches[0][1], "|")
+
+	rv, err = parseSexagesimal(parts)
+	if err != nil {
+		rv, err = parseFloat(parts)
 	}
 
 	if err == nil {
@@ -88,7 +133,7 @@ func ParseGeolinks(text string) (rv Geolink, err error) {
 			return rv, errors.New(fmt.Sprintf("Invalid longitude: %v", rv.Lon))
 		}
 	} else {
-		rv = Geolink{}
+		rv = Coord{}
 	}
 
 	return rv, err

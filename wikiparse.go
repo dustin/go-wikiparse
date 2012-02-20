@@ -46,11 +46,11 @@ type Page struct {
 
 func doPage(p *Page) {
 	defer wg.Done()
-	gl, err := ParseGeolinks(p.Revision.Text)
+	gl, err := ParseCoords(p.Revision.Text)
 	if err == nil {
 		log.Printf("Found geo data in %q: %#v", p.Title, gl)
 	} else {
-		if err != NoGeoFound {
+		if err != NoCoordFound {
 			log.Fatalf("Error parsing geo from %#v: %v", *p, err)
 		}
 	}
