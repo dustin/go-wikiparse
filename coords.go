@@ -9,12 +9,13 @@ import (
 	"strings"
 )
 
-var GeoRE *regexp.Regexp
+var geoRE, nowikiRE *regexp.Regexp
 
 var NoGeoFound = errors.New("No geolinks data found.")
 
 func init() {
-	GeoRE = regexp.MustCompile(`(?mi){{geolinks-(\w+)-(\w+)\|([^}]*)}}`)
+	geoRE = regexp.MustCompile(`(?mi){{geolinks-(\w+)-(\w+)\|([^}]*)}}`)
+	nowikiRE = regexp.MustCompile(`(?ms)<nowiki>.*</nowiki>`)
 }
 
 type Geolink struct {
@@ -56,7 +57,8 @@ func fillLongLat(rv *Geolink, longlat []string) error {
 }
 
 func ParseGeolinks(text string) (rv Geolink, err error) {
-	matches := GeoRE.FindAllStringSubmatch(text, 1)
+	cleaned := nowikiRE.ReplaceAllString(text, "")
+	matches := geoRE.FindAllStringSubmatch(cleaned, 1)
 	if len(matches) == 0 || len(matches[0]) < 4 {
 		return rv, NoGeoFound
 	}
@@ -85,6 +87,8 @@ func ParseGeolinks(text string) (rv Geolink, err error) {
 		if math.Abs(rv.Lon) > 180 {
 			return rv, errors.New(fmt.Sprintf("Invalid longitude: %v", rv.Lon))
 		}
+	} else {
+		rv = Geolink{}
 	}
 
 	return rv, err

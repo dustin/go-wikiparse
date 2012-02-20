@@ -11,6 +11,7 @@ type testinput struct {
 	scale string
 	lon   float64
 	lat   float64
+	err   string
 }
 
 var testdata = []testinput{
@@ -19,48 +20,72 @@ var testdata = []testinput{
 		"US", "streetscale",
 		-118.1746540,
 		34.1996350,
+		"",
 	},
 	testinput{
 		"{{Geolinks-AUS-suburbscale|long=146.5333|lat=-38.1833}}",
 		"AUS", "suburbscale",
 		146.5333,
 		-38.1833,
+		"",
 	},
 	testinput{
 		"{{geolinks-US-streetscale|37.2750|-81.1240|region:US_type:_scale:300000}}",
 		"US", "streetscale",
 		-81.1240,
 		37.2750,
+		"",
 	},
 	testinput{
 		"{{Geolinks-US-buildingscale|30.325939|-87.316879}}",
 		"US", "buildingscale",
 		-87.316879,
 		30.325939,
+		"",
 	},
 	testinput{
 		"{{geolinks-Canada-streetscale|45.375121|-75.897846}}",
 		"Canada", "streetscale",
 		-75.897846,
 		45.375121,
+		"",
 	},
 	testinput{
 		"{{Geolinks-US-streetscale|39.118474|-77.235947|Kentlands (Gaithersburg, MD)}}",
 		"US", "streetscale",
 		-77.235947,
 		39.118474,
+		"",
 	},
 	testinput{
 		"{{Geolinks-US-streetscale|40.94759700 |-72.89820700}}",
 		"US", "streetscale",
 		-72.89820700,
 		40.94759700,
+		"",
 	},
 	testinput{
 		"{{Geolinks-AUS-suburbscale|lat=-25.898938|long=139.351694}}",
 		"AUS", "suburbscale",
 		139.351694,
 		-25.898938,
+		"",
+	},
+	testinput{
+		"<nowiki>{{Geolinks-AUS-suburbscale|long=[LONG]|lat=[LAT]}}</nowiki>",
+		"", "",
+		0,
+		0,
+		"No geolinks data found.",
+	},
+	testinput{
+		`<nowiki>
+{{Geolinks-AUS-suburbscale|long=[LONG]|lat=[LAT]}}
+</nowiki>`,
+		"", "",
+		0,
+		0,
+		"No geolinks data found.",
 	},
 }
 
@@ -73,8 +98,11 @@ func assertEpsilon(t *testing.T, input, field string, expected, got float64) {
 
 func testOne(t *testing.T, ti testinput, input string) {
 	geo, err := ParseGeolinks(input)
-	if err != nil {
-		t.Fatalf("Error on %v: %v", input, err)
+	if err != nil && err.Error() != ti.err {
+		t.Fatalf("Unexpected error %q on %v, got %v", ti.err, input, err)
+	}
+	if err == nil && ti.err != "" {
+		t.Fatalf("Expected error on %v", input)
 	}
 	t.Logf("Parsed %#v", geo)
 	if geo.Type != ti.gtype {
