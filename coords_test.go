@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"strings"
 	"testing"
 )
 
@@ -50,6 +51,18 @@ var testdata = []testinput{
 		"",
 	},
 	testinput{
+		"{{coord|97|59|16|S|86|56|40|W|invalid lat}}",
+		-97.98777777,
+		-86.94444444,
+		"Invalid latitude: -97.98777",
+	},
+	testinput{
+		"{{coord|27|59|16|S|186|56|40|W|invalid long}}",
+		-27.98777777,
+		-186.94444444,
+		"Invalid longitude: -186.9444",
+	},
+	testinput{
 		"<nowiki>{{coord|27|59|16|N|86|56|40|E}}</nowiki>",
 		0,
 		0,
@@ -88,11 +101,15 @@ func assertEpsilon(t *testing.T, input, field string, expected, got float64) {
 
 func testOne(t *testing.T, ti testinput, input string) {
 	coord, err := ParseCoords(input)
-	if err != nil && err.Error() != ti.err {
-		t.Fatalf("Unexpected error %q on %v, got %v", ti.err, input, err)
-	}
-	if err == nil && ti.err != "" {
-		t.Fatalf("Expected error on %v", input)
+	switch {
+	case err == nil && ti.err == "":
+		// ok
+	case err != nil && strings.HasPrefix(err.Error(), ti.err):
+		// ok
+	case err == nil && ti.err != "":
+		t.Fatalf("Expected error %q on %v", ti.err, input)
+	default:
+		t.Fatalf("Unexpected error on %v, got %v, wanted %q", input, err, ti.err)
 	}
 	t.Logf("Parsed %#v", coord)
 	assertEpsilon(t, input, "lon", ti.lon, coord.Lon)
