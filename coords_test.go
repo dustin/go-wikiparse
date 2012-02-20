@@ -63,6 +63,14 @@ var testdata = []testinput{
 		"",
 	},
 	testinput{
+		"North Maple in Russell ({{coord|38.895352|-98.861034}}) and it remained his " +
+			"official residence throughout his political career." +
+			"<ref>{{cite news| url=http://www.time.com/}}",
+		38.895352,
+		-98.861034,
+		"",
+	},
+	testinput{
 		"{{coord|97|59|16|S|86|56|40|W|invalid lat}}",
 		-97.98777777,
 		-86.94444444,

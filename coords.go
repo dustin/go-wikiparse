@@ -16,7 +16,7 @@ var NoCoordFound = errors.New("No coord data found.")
 var notSexagesimal = errors.New("Not a sexagesimal value")
 
 func init() {
-	coordRE = regexp.MustCompile(`(?mi){{coord\|(.*)}}`)
+	coordRE = regexp.MustCompile(`(?mi){{coord\|(.[^}]*)}}`)
 	nowikiRE = regexp.MustCompile(`(?ms)<nowiki>.*</nowiki>`)
 	commentRE = regexp.MustCompile(`(?ms)<!--.*-->`)
 }
