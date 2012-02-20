@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -69,6 +71,15 @@ func ParseGeolinks(text string) (rv Geolink, err error) {
 		err = fillLongLat(&rv, latlon)
 	} else {
 		err = fillLatLon(&rv, latlon)
+	}
+
+	if err == nil {
+		if math.Abs(rv.Lat) > 90 {
+			return rv, errors.New(fmt.Sprintf("Invalid latitude: %v", rv.Lat))
+		}
+		if math.Abs(rv.Lon) > 180 {
+			return rv, errors.New(fmt.Sprintf("Invalid longitude: %v", rv.Lon))
+		}
 	}
 
 	return rv, err

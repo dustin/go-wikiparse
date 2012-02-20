@@ -5,9 +5,13 @@ import (
 	"encoding/xml"
 	"log"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/dustin/go-humanize"
 )
+
+var wg = sync.WaitGroup{}
 
 type SiteInfo struct {
 	SiteName   string `xml:"sitename"`
@@ -40,13 +44,33 @@ type Page struct {
 	Revision Revision `xml:"revision"`
 }
 
-func parsePage(d *xml.Decoder) error {
+func doPage(p *Page) {
+	defer wg.Done()
+	gl, err := ParseGeolinks(p.Revision.Text)
+	if err == nil {
+		log.Printf("Found geo data in %q: %#v", p.Title, gl)
+	} else {
+		if err != NoGeoFound {
+			log.Fatalf("Error parsing geo from %#v", *p)
+		}
+	}
+
+}
+
+func pageHandler(ch <-chan *Page) {
+	for p := range ch {
+		doPage(p)
+	}
+}
+
+func parsePage(d *xml.Decoder, ch chan<- *Page) error {
 	page := Page{}
 	err := d.Decode(&page)
 	if err != nil {
 		return err
 	}
-	// log.Printf("Got page:  %+v", page)
+	wg.Add(1)
+	ch <- &page
 	return nil
 }
 
@@ -73,15 +97,30 @@ func main() {
 	}
 	log.Printf("Got site info:  %+v", si)
 
+	ch := make(chan *Page, 1000)
+
+	for i := 0; i < 8; i++ {
+		go pageHandler(ch)
+	}
+
 	pages := int64(0)
+	start := time.Now()
+	prev := start
+	reportfreq := int64(1000)
 	for err == nil {
-		err = parsePage(d)
+		err = parsePage(d, ch)
 		pages++
-		if pages%1000 == 0 {
-			log.Printf("Processed %s pages", humanize.Comma(pages))
+		if pages%reportfreq == 0 {
+			now := time.Now()
+			d := now.Sub(prev)
+			log.Printf("Processed %s pages total (%.2f/s)",
+				humanize.Comma(pages), float64(reportfreq)/d.Seconds())
+			prev = now
 		}
 	}
-	log.Printf("Ended with err:  %v after %s pages",
-		err, humanize.Comma(pages))
+	wg.Wait()
+	close(ch)
+	log.Printf("Ended with err after %v:  %v after %s pages",
+		time.Now().Sub(start), err, humanize.Comma(pages))
 
 }
