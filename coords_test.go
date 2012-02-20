@@ -50,6 +50,12 @@ var testdata = []testinput{
 		-77.235947,
 		39.118474,
 	},
+	testinput{
+		"{{Geolinks-US-streetscale|40.94759700 |-72.89820700}}",
+		"US", "streetscale",
+		-72.89820700,
+		40.94759700,
+	},
 }
 
 func assertEpsilon(t *testing.T, input, field string, expected, got float64) {

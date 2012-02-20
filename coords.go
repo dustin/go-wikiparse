@@ -66,6 +66,8 @@ func ParseGeolinks(text string) (rv Geolink, err error) {
 	if len(latlon) < 2 {
 		return rv, NoGeoFound
 	}
+	latlon[0] = strings.TrimSpace(latlon[0])
+	latlon[1] = strings.TrimSpace(latlon[1])
 
 	if strings.HasPrefix(latlon[0], "long=") {
 		err = fillLongLat(&rv, latlon)

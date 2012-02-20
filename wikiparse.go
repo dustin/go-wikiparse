@@ -51,7 +51,7 @@ func doPage(p *Page) {
 		log.Printf("Found geo data in %q: %#v", p.Title, gl)
 	} else {
 		if err != NoGeoFound {
-			log.Fatalf("Error parsing geo from %#v", *p)
+			log.Fatalf("Error parsing geo from %#v: %v", *p, err)
 		}
 	}
 
