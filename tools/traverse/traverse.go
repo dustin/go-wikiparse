@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"misc/wikipedia"
+	"github.com/dustin/go-wikiparse"
 )
 
 var wg, errwg sync.WaitGroup
