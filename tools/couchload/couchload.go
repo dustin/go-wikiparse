@@ -38,8 +38,9 @@ type Article struct {
 	Geo  *Geo   `json:"geo,omitempty"`
 }
 
-func escapeslash(in string) string {
-	return strings.Replace(in, "/", "%2f", -1)
+func escapeTitle(in string) string {
+	return strings.Replace(strings.Replace(in, "/", "%2f", -1),
+		"+", "%2b", -1)
 }
 
 func resolveConflict(db *couch.Database, a *Article) {
@@ -78,7 +79,7 @@ func doPage(db *couch.Database, p *wikiparse.Page) {
 	article.RevInfo.ContributorId = p.Revision.Contributor.ID
 	article.RevInfo.Comment = p.Revision.Comment
 	article.Text = p.Revision.Text
-	article.ID = escapeslash(p.Title)
+	article.ID = escapeTitle(p.Title)
 
 	_, _, err = db.Insert(&article)
 	httpe, isHttpError := err.(*couch.HttpError)
