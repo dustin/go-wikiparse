@@ -27,7 +27,7 @@ type Contributor struct {
 
 // A revision to a page.
 type Revision struct {
-	ID          int         `xml:"id"`
+	ID          uint64      `xml:"id"`
 	Timestamp   string      `xml:"timestamp"`
 	Contributor Contributor `xml:"contributor"`
 	Comment     string      `xml:"comment"`
