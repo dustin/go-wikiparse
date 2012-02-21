@@ -46,7 +46,7 @@ func escapeTitle(in string) string {
 func resolveConflict(db *couch.Database, a *Article) {
 	log.Printf("Resolving conflict on %s", a.ID)
 	var prev Article
-	err := db.Retrieve(a.ID, &prev)
+	err := db.Retrieve(escapeTitle(a.ID), &prev)
 	if err != nil {
 		log.Printf("  Error retrieving existing %v: %v", a.ID, err)
 		return
