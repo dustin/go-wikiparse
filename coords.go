@@ -1,4 +1,4 @@
-package main
+package wikiparse
 
 import (
 	"errors"
@@ -21,6 +21,7 @@ func init() {
 	commentRE = regexp.MustCompile(`(?ms)<!--.*-->`)
 }
 
+// Longitude/latitude pair from a coordinate match.
 type Coord struct {
 	Lon float64
 	Lat float64
