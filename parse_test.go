@@ -367,6 +367,7 @@ The [[Internet]] has helped autistic individuals bypass nonverbal cues and emoti
 `
 
 func xmld(b *testing.B, doc []byte) {
+	b.SetBytes(int64(len(doc)))
 	br := bytes.NewReader(doc)
 	for i := 0; i < b.N; i++ {
 		br.Seek(0, 0)
@@ -388,6 +389,7 @@ func BenchmarkLargeParsing(b *testing.B) {
 }
 
 func tokening(b *testing.B, doc []byte) {
+	b.SetBytes(int64(len(doc)))
 	br := bytes.NewReader(doc)
 	for i := 0; i < b.N; i++ {
 		br.Seek(0, 0)
