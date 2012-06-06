@@ -20,7 +20,7 @@ type Geo struct {
 	Geometry struct {
 		Type        string    `json:"type"`
 		Coordinates []float64 `json:"coordinates"`
-	}           `json:"geometry"`
+	} `json:"geometry"`
 	Type string `json:"type"`
 }
 
@@ -33,7 +33,7 @@ type Article struct {
 		Contributor   string `json:"contributor"`
 		ContributorId uint64 `json:"contributorid"`
 		Comment       string `json:"comment"`
-	}           `json:"revinfo"`
+	} `json:"revinfo"`
 	Text string `json:"text"`
 	Geo  *Geo   `json:"geo,omitempty"`
 }
