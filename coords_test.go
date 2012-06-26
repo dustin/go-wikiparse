@@ -147,12 +147,14 @@ func testOne(t *testing.T, ti testinput, input string) {
 }
 
 func TestCoordSimple(t *testing.T) {
+	t.Parallel()
 	for _, ti := range testdata {
 		testOne(t, ti, ti.input)
 	}
 }
 
 func TestCoordWithGarbage(t *testing.T) {
+	t.Parallel()
 	for _, ti := range testdata {
 		input := " some random garbage " + ti.input + " and stuff"
 		testOne(t, ti, input)
@@ -160,6 +162,7 @@ func TestCoordWithGarbage(t *testing.T) {
 }
 
 func TestCoordMultiline(t *testing.T) {
+	t.Parallel()
 	for _, ti := range testdata {
 		input := " some random garbage\n\nnewlines\n" + ti.input + " and stuff"
 		testOne(t, ti, input)
