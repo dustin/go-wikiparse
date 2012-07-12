@@ -66,3 +66,53 @@ func (ir *IndexReader) Next() (rv IndexEntry, err error) {
 func NewIndexReader(r io.Reader) *IndexReader {
 	return &IndexReader{r: bufio.NewReader(r)}
 }
+
+// Get offsets and counts from an index.
+//
+// If you don't want to know the individual articles, just how many
+// and where, this is for you.
+type IndexSummaryReader struct {
+	index      *IndexReader
+	prevOffset int64
+	count      int
+}
+
+// Get a new IndexSummaryReader from the given stream of index lines.
+func NewIndexSummaryReader(r io.Reader) (rv *IndexSummaryReader, err error) {
+	rv = &IndexSummaryReader{index: NewIndexReader(r)}
+	first, err := rv.index.Next()
+	if err != nil {
+		return nil, err
+	}
+	rv.prevOffset = first.StreamOffset
+	rv.count = 1
+
+	return rv, nil
+}
+
+// Get the next offset and count from the index summary reader.
+//
+// Note that the last returns io.EOF as an error, but a valid offset
+// and count.
+func (isr *IndexSummaryReader) Next() (offset int64, count int, err error) {
+	for {
+		e, err := isr.index.Next()
+		if err != nil {
+			offset = isr.prevOffset
+			count = isr.count
+			isr.prevOffset = 0
+			isr.count = 0
+			return offset, count, err
+		}
+
+		if e.StreamOffset != isr.prevOffset {
+			offset = isr.prevOffset
+			count = isr.count
+			isr.prevOffset = e.StreamOffset
+			isr.count = 1
+			return offset, count, nil
+		}
+		isr.count++
+	}
+	panic("Unreachable")
+}

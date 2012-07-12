@@ -56,3 +56,35 @@ func TestIndexReader(t *testing.T) {
 	}
 
 }
+
+func TestIndexSummary(t *testing.T) {
+	r := strings.NewReader(testData)
+	isr, err := NewIndexSummaryReader(r)
+	if err != nil {
+		t.Fatalf("Error initializing IndexSummaryReader: %v", err)
+	}
+
+	expected := []struct {
+		offset int64
+		count  int
+		err    error
+	}{
+		{499, 10, nil},
+		{2147418907, 6, nil},
+		{lastChunk, 4, io.EOF},
+		{0, 0, io.EOF},
+	}
+
+	for _, e := range expected {
+		offset, count, err := isr.Next()
+		if offset != e.offset {
+			t.Fatalf("Expected offset %v, got %v", e.offset, offset)
+		}
+		if count != e.count {
+			t.Fatalf("Expected count %v, got %v", e.count, count)
+		}
+		if err != e.err {
+			t.Fatalf("Expected err %v, got %v", e.err, err)
+		}
+	}
+}
