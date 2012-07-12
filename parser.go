@@ -42,14 +42,20 @@ type Page struct {
 }
 
 // That which emits wiki pages.
-type Parser struct {
-	// The toplevel site info.
-	SiteInfo SiteInfo
+type Parser interface {
+	// Get the next page from the parser
+	Next() (*Page, error)
+	// Get the toplevel site info from the stream
+	SiteInfo() SiteInfo
+}
+
+type singleStreamParser struct {
+	siteInfo SiteInfo
 	x        *xml.Decoder
 }
 
 // Get a wikipedia dump parser reading from the given reader.
-func NewParser(r io.Reader) (*Parser, error) {
+func NewParser(r io.Reader) (Parser, error) {
 	d := xml.NewDecoder(r)
 	_, err := d.Token()
 	if err != nil {
@@ -62,15 +68,18 @@ func NewParser(r io.Reader) (*Parser, error) {
 		return nil, err
 	}
 
-	return &Parser{
-		SiteInfo: si,
+	return &singleStreamParser{
+		siteInfo: si,
 		x:        d,
 	}, nil
 }
 
-// Get the next page from the parser
-func (p *Parser) Next() (rv *Page, err error) {
+func (p *singleStreamParser) Next() (rv *Page, err error) {
 	rv = new(Page)
 	err = p.x.Decode(rv)
 	return
+}
+
+func (p *singleStreamParser) SiteInfo() SiteInfo {
+	return p.siteInfo
 }

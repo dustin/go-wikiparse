@@ -57,7 +57,7 @@ func main() {
 		log.Fatalf("Error setting up new page parser:  %v", err)
 	}
 
-	log.Printf("Got site info:  %+v", p.SiteInfo)
+	log.Printf("Got site info:  %+v", p.SiteInfo())
 
 	ch := make(chan *wikiparse.Page, 1000)
 
