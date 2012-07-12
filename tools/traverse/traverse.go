@@ -64,21 +64,7 @@ func errorHandler(ch <-chan *wikiparse.Page) {
 	}
 }
 
-func main() {
-	filename := os.Args[1]
-	f, err := os.Open(filename)
-	if err != nil {
-		log.Fatalf("Error opening file: %v", err)
-	}
-	defer f.Close()
-
-	z := bzip2.NewReader(f)
-
-	p, err := wikiparse.NewParser(z)
-	if err != nil {
-		log.Fatalf("Error setting up new page parser:  %v", err)
-	}
-
+func process(p wikiparse.Parser) {
 	log.Printf("Got site info:  %+v", p.SiteInfo())
 
 	ch := make(chan *wikiparse.Page, 1000)
@@ -95,6 +81,7 @@ func main() {
 	start := time.Now()
 	prev := start
 	reportfreq := int64(1000)
+	var err error
 	for err == nil {
 		var page *wikiparse.Page
 		page, err = p.Next()
@@ -116,7 +103,43 @@ func main() {
 	close(ch)
 	close(cherr)
 	errwg.Wait()
-	log.Printf("Ended with err after %v:  %v after %s pages",
-		time.Now().Sub(start), err, humanize.Comma(pages))
+	d := time.Since(start)
+	log.Printf("Ended with err after %v:  %v after %s pages (%.2f p/s)",
+		d, err, humanize.Comma(pages), float64(pages)/d.Seconds())
+}
 
+func processSingleStream(filename string) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Error opening file: %v", err)
+	}
+	defer f.Close()
+
+	z := bzip2.NewReader(f)
+
+	p, err := wikiparse.NewParser(z)
+	if err != nil {
+		log.Fatalf("Error setting up new page parser:  %v", err)
+	}
+
+	process(p)
+}
+
+func processMultiStream(idx, data string) {
+	p, err := wikiparse.NewIndexedParser(idx, data, 8)
+	if err != nil {
+		log.Fatalf("Error initializing multistream parser: %v", err)
+	}
+	process(p)
+}
+
+func main() {
+	switch len(os.Args) {
+	case 2:
+		processSingleStream(os.Args[1])
+	case 3:
+		processMultiStream(os.Args[1], os.Args[2])
+	default:
+		log.Fatalf("Need either a single stream dump, or index and multi-stream")
+	}
 }
