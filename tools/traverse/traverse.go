@@ -5,8 +5,10 @@ import (
 	"compress/bzip2"
 	"encoding/gob"
 	"encoding/xml"
+	"flag"
 	"log"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
@@ -14,10 +16,12 @@ import (
 	"github.com/dustin/go-wikiparse"
 )
 
+var numWorkers int
+var parseCoords bool
+
 var wg, errwg sync.WaitGroup
 
-func doPage(p *wikiparse.Page, cherr chan<- *wikiparse.Page) {
-	defer wg.Done()
+func parsePageCoords(p *wikiparse.Page, cherr chan<- *wikiparse.Page) {
 	_, err := wikiparse.ParseCoords(p.Revision.Text)
 	if err == nil {
 		// log.Printf("Found geo data in %q: %#v", p.Title, gl)
@@ -27,12 +31,14 @@ func doPage(p *wikiparse.Page, cherr chan<- *wikiparse.Page) {
 			log.Printf("Error parsing geo from %#v: %v", *p, err)
 		}
 	}
-
 }
 
 func pageHandler(ch <-chan *wikiparse.Page, cherr chan<- *wikiparse.Page) {
 	for p := range ch {
-		doPage(p, cherr)
+		if parseCoords {
+			parsePageCoords(p, cherr)
+		}
+		wg.Done()
 	}
 }
 
@@ -70,7 +76,7 @@ func process(p wikiparse.Parser) {
 	ch := make(chan *wikiparse.Page, 1000)
 	cherr := make(chan *wikiparse.Page, 10)
 
-	for i := 0; i < 8; i++ {
+	for i := 0; i < numWorkers; i++ {
 		go pageHandler(ch, cherr)
 	}
 
@@ -126,7 +132,7 @@ func processSingleStream(filename string) {
 }
 
 func processMultiStream(idx, data string) {
-	p, err := wikiparse.NewIndexedParser(idx, data, 8)
+	p, err := wikiparse.NewIndexedParser(idx, data, runtime.GOMAXPROCS(0))
 	if err != nil {
 		log.Fatalf("Error initializing multistream parser: %v", err)
 	}
@@ -134,11 +140,20 @@ func processMultiStream(idx, data string) {
 }
 
 func main() {
-	switch len(os.Args) {
+	var cpus int
+	flag.IntVar(&numWorkers, "workers", 8, "Number of parsing workers")
+	flag.IntVar(&cpus, "cpus", runtime.GOMAXPROCS(0), "Number of CPUS to utilize")
+	flag.BoolVar(&parseCoords, "parseCoords", false,
+		"Try to parse geo data while traversing")
+	flag.Parse()
+
+	runtime.GOMAXPROCS(cpus)
+
+	switch flag.NArg() {
+	case 1:
+		processSingleStream(flag.Arg(0))
 	case 2:
-		processSingleStream(os.Args[1])
-	case 3:
-		processMultiStream(os.Args[1], os.Args[2])
+		processMultiStream(flag.Arg(0), flag.Arg(1))
 	default:
 		log.Fatalf("Need either a single stream dump, or index and multi-stream")
 	}
