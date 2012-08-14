@@ -38,7 +38,7 @@ type Revision struct {
 type Page struct {
 	Title    string   `xml:"title"`
 	ID       uint64   `xml:"id"`
-	Revision Revision `xml:"revision"`
+	Revision []Revision `xml:"revision"`
 }
 
 // That which emits wiki pages.
