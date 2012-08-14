@@ -67,18 +67,18 @@ func resolveConflict(db *couch.Database, a *Article) {
 func doPage(db *couch.Database, p *wikiparse.Page) {
 	defer wg.Done()
 	article := Article{}
-	gl, err := wikiparse.ParseCoords(p.Revision.Text)
+	gl, err := wikiparse.ParseCoords(p.Revision[0].Text)
 	if err == nil {
 		article.Geo = &Geo{Type: "Feature"}
 		article.Geo.Geometry.Type = "Point"
 		article.Geo.Geometry.Coordinates = []float64{gl.Lon, gl.Lat}
 	}
-	article.RevInfo.ID = p.Revision.ID
-	article.RevInfo.Timestamp = p.Revision.Timestamp
-	article.RevInfo.Contributor = p.Revision.Contributor.Username
-	article.RevInfo.ContributorId = p.Revision.Contributor.ID
-	article.RevInfo.Comment = p.Revision.Comment
-	article.Text = p.Revision.Text
+	article.RevInfo.ID = p.Revision[0].ID
+	article.RevInfo.Timestamp = p.Revision[0].Timestamp
+	article.RevInfo.Contributor = p.Revision[0].Contributor.Username
+	article.RevInfo.ContributorId = p.Revision[0].Contributor.ID
+	article.RevInfo.Comment = p.Revision[0].Comment
+	article.Text = p.Revision[0].Text
 	article.ID = escapeTitle(p.Title)
 
 	_, _, err = db.Insert(&article)
