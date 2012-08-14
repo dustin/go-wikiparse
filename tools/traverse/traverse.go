@@ -22,7 +22,7 @@ var parseCoords bool
 var wg, errwg sync.WaitGroup
 
 func parsePageCoords(p *wikiparse.Page, cherr chan<- *wikiparse.Page) {
-	_, err := wikiparse.ParseCoords(p.Revision[0].Text)
+	_, err := wikiparse.ParseCoords(p.Revisions[0].Text)
 	if err == nil {
 		// log.Printf("Found geo data in %q: %#v", p.Title, gl)
 	} else {

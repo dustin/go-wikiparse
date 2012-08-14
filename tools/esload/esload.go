@@ -31,9 +31,9 @@ func pageHandler(u string, ch chan *wikiparse.Page) {
 			Index: "wikipediax",
 			Type:  "article",
 			Body: map[string]interface{}{
-				"author":    p.Revision[0].Contributor.Username,
-				"text":      p.Revision[0].Text,
-				"timestamp": p.Revision[0].Timestamp,
+				"author":    p.Revisions[0].Contributor.Username,
+				"text":      p.Revisions[0].Text,
+				"timestamp": p.Revisions[0].Timestamp,
 			},
 		}
 		bulkLoader.Update(&ui)
