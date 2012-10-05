@@ -1,6 +1,7 @@
 #*
 *~
-/tools/traverse/errors.gob
-/tools/traverse/traverse
+/tools/cbload/cbload
 /tools/couchload/couchload
 /tools/indexfix/indexfix
+/tools/traverse/errors.gob
+/tools/traverse/traverse
