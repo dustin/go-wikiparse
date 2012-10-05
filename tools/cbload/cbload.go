@@ -97,7 +97,7 @@ func main() {
 		log.Fatalf("Error connecting to couchbase: %v", err)
 	}
 
-	p, err := wikiparse.NewIndexedParser(flag.Arg(1), flag.Arg(2),
+	p, err := wikiparse.NewIndexedParser(flag.Arg(0), flag.Arg(1),
 		runtime.GOMAXPROCS(0))
 	if err != nil {
 		log.Fatalf("Error initializing multistream parser: %v", err)
