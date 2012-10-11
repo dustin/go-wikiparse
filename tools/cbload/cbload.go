@@ -51,6 +51,7 @@ type Article struct {
 	Text  string   `json:"text"`
 	Geo   *Geo     `json:"geo,omitempty"`
 	Files []string `json:"files,omitempty"`
+	Links []string `json:"links,omitempty"`
 }
 
 func doPage(db *couchbase.Bucket, p *wikiparse.Page) {
@@ -67,6 +68,7 @@ func doPage(db *couchbase.Bucket, p *wikiparse.Page) {
 	article.RevInfo.ContributorId = p.Revisions[0].Contributor.ID
 	article.RevInfo.Comment = p.Revisions[0].Comment
 	article.Files = wikiparse.FindFiles(article.Text)
+	article.Links = wikiparse.FindLinks(article.Text)
 
 	err = db.Set(p.Title, 0, article)
 	if err != nil {
