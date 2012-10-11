@@ -10,14 +10,6 @@ import (
 
 var fileRE *regexp.Regexp
 
-type change struct {
-	Seq int64
-	Id  string
-	Doc struct {
-		Text string
-	}
-}
-
 func init() {
 	fileRE = regexp.MustCompile(`\[File:([^\|\]]+)`)
 }
