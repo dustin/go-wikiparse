@@ -2,9 +2,9 @@
 package main
 
 import (
-	"compress/bzip2"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -34,8 +34,10 @@ type Article struct {
 		ContributorId uint64 `json:"contributorid"`
 		Comment       string `json:"comment"`
 	} `json:"revinfo"`
-	Text string `json:"text"`
-	Geo  *Geo   `json:"geo,omitempty"`
+	Text  string   `json:"text"`
+	Geo   *Geo     `json:"geo,omitempty"`
+	Files []string `json:"files,omitempty"`
+	Links []string `json:"links,omitempty"`
 }
 
 func escapeTitle(in string) string {
@@ -80,6 +82,8 @@ func doPage(db *couch.Database, p *wikiparse.Page) {
 	article.RevInfo.Comment = p.Revisions[0].Comment
 	article.Text = p.Revisions[0].Text
 	article.ID = escapeTitle(p.Title)
+	article.Files = wikiparse.FindFiles(article.Text)
+	article.Links = wikiparse.FindLinks(article.Text)
 
 	_, _, err = db.Insert(&article)
 	httpe, isHttpError := err.(*couch.HttpError)
@@ -100,24 +104,16 @@ func pageHandler(db couch.Database, ch <-chan *wikiparse.Page) {
 }
 
 func main() {
-	filename, dburl := os.Args[1], os.Args[2]
+	dburl, idx, file := os.Args[1], os.Args[2], os.Args[3]
 
 	db, err := couch.Connect(dburl)
 	if err != nil {
-		log.Fatal("Error connecting to couchdb: %v", err)
+		log.Fatalf("Error connecting to couchdb: %v", err)
 	}
 
-	f, err := os.Open(filename)
+	p, err := wikiparse.NewIndexedParser(idx, file, runtime.GOMAXPROCS(0))
 	if err != nil {
-		log.Fatalf("Error opening file: %v", err)
-	}
-	defer f.Close()
-
-	z := bzip2.NewReader(f)
-
-	p, err := wikiparse.NewParser(z)
-	if err != nil {
-		log.Fatalf("Error setting up new page parser:  %v", err)
+		log.Fatalf("Error initializing multistream parser: %v", err)
 	}
 
 	log.Printf("Got site info:  %+v", p.SiteInfo())
