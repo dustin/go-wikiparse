@@ -67,7 +67,7 @@ func multiStreamWorker(datafn string, wg *sync.WaitGroup,
 		d := xml.NewDecoder(bz)
 
 		for i := 0; i < idxChunk.count && err != io.EOF; i++ {
-			newpage := new(Page)
+			newpage := &Page{}
 			err = d.Decode(newpage)
 			if err == nil {
 				p.entries <- newpage
