@@ -140,10 +140,8 @@ func testOne(t *testing.T, ti testinput, input string) {
 		t.Fatalf("Wanted %v,%v with error %v, got %#v with error %v",
 			ti.lat, ti.lon, ti.err, coord, err)
 	}
-	t.Logf("Parsed %#v with %v", coord, err)
 	assertEpsilon(t, input, "lon", ti.lon, coord.Lon)
 	assertEpsilon(t, input, "lat", ti.lat, coord.Lat)
-	t.Logf("Results for %s:  %#v", input, coord)
 }
 
 func TestCoordSimple(t *testing.T) {
