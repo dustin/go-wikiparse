@@ -114,5 +114,4 @@ func (isr *IndexSummaryReader) Next() (offset int64, count int, err error) {
 		}
 		isr.count++
 	}
-	panic("Unreachable")
 }
