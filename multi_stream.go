@@ -21,13 +21,9 @@ type multiStreamParser struct {
 	entries  chan *Page
 }
 
-func multiStreamIndexWorker(indexfn string, p *multiStreamParser) {
+func multiStreamIndexWorker(r io.ReadCloser, p *multiStreamParser) {
 	defer close(p.workerch)
 
-	r, err := os.Open(indexfn)
-	if err != nil {
-		log.Fatalf("Error opening %v: %v", indexfn, err)
-	}
 	defer r.Close()
 
 	bz := bzip2.NewReader(r)
@@ -48,13 +44,13 @@ func multiStreamIndexWorker(indexfn string, p *multiStreamParser) {
 	}
 }
 
-func multiStreamWorker(datafn string, wg *sync.WaitGroup,
+func multiStreamWorker(src IndexedParseSource, wg *sync.WaitGroup,
 	p *multiStreamParser) {
 	defer wg.Done()
 
-	r, err := os.Open(datafn)
+	r, err := src.OpenData()
 	if err != nil {
-		log.Fatalf("Error opening %v: %v", datafn, err)
+		log.Fatalf("Error opening data: %v", err)
 	}
 	defer r.Close()
 
@@ -76,9 +72,30 @@ func multiStreamWorker(datafn string, wg *sync.WaitGroup,
 	}
 }
 
-// Get a wikipedia dump parser reading from the given reader.
-func NewIndexedParser(indexfn, datafn string, numWorkers int) (Parser, error) {
-	r, err := os.Open(datafn)
+type ReadSeekCloser interface {
+	io.ReadSeeker
+	io.Closer
+}
+
+type IndexedParseSource interface {
+	OpenIndex() (io.ReadCloser, error)
+	OpenData() (ReadSeekCloser, error)
+}
+
+type filesSource struct {
+	idxfile, datafile string
+}
+
+func (f filesSource) OpenIndex() (io.ReadCloser, error) {
+	return os.Open(f.idxfile)
+}
+
+func (f filesSource) OpenData() (ReadSeekCloser, error) {
+	return os.Open(f.datafile)
+}
+
+func NewIndexedParserFromSrc(src IndexedParseSource, numWorkers int) (Parser, error) {
+	r, err := src.OpenData()
 	if err != nil {
 		return nil, err
 	}
@@ -107,10 +124,16 @@ func NewIndexedParser(indexfn, datafn string, numWorkers int) (Parser, error) {
 	wg := sync.WaitGroup{}
 	wg.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go multiStreamWorker(datafn, &wg, rv)
+		go multiStreamWorker(src, &wg, rv)
 	}
 
-	go multiStreamIndexWorker(indexfn, rv)
+	ridx, err := src.OpenIndex()
+	if err != nil {
+		log.Fatalf("Error opening index: %v", err)
+	}
+	defer ridx.Close()
+
+	go multiStreamIndexWorker(ridx, rv)
 
 	go func() {
 		wg.Wait()
@@ -118,6 +141,11 @@ func NewIndexedParser(indexfn, datafn string, numWorkers int) (Parser, error) {
 	}()
 
 	return rv, nil
+}
+
+// Get a wikipedia dump parser reading from the given reader.
+func NewIndexedParser(indexfn, datafn string, numWorkers int) (Parser, error) {
+	return NewIndexedParserFromSrc(filesSource{indexfn, datafn}, numWorkers)
 }
 
 func (p *multiStreamParser) Next() (rv *Page, err error) {
