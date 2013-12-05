@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"code.google.com/p/dsallings-couch-go"
+	"github.com/dustin/go-couch"
 	"github.com/dustin/go-humanize"
 	"github.com/dustin/go-wikiparse"
 )
@@ -86,7 +86,7 @@ func doPage(db *couch.Database, p *wikiparse.Page) {
 	article.Links = wikiparse.FindLinks(article.Text)
 
 	_, _, err = db.Insert(&article)
-	httpe, isHttpError := err.(*couch.HttpError)
+	httpe, isHttpError := err.(*couch.HTTPError)
 	switch {
 	case err == nil:
 		// yay
