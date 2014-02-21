@@ -80,19 +80,19 @@ var testdata = []testinput{
 		"{{coord|97|59|16|S|86|56|40|W|invalid lat}}",
 		-97.98777777,
 		-86.94444444,
-		"Invalid latitude: -97.98777",
+		"invalid latitude: -97.98777",
 	},
 	testinput{
 		"{{coord|27|59|16|S|186|56|40|W|invalid long}}",
 		-27.98777777,
 		-186.94444444,
-		"Invalid longitude: -186.9444",
+		"invalid longitude: -186.9444",
 	},
 	testinput{
 		"<nowiki>{{coord|27|59|16|N|86|56|40|E}}</nowiki>",
 		0,
 		0,
-		"No coord data found.",
+		"no coord data found",
 	},
 	testinput{
 		`<nowiki>
@@ -100,13 +100,13 @@ var testdata = []testinput{
 </nowiki>`,
 		0,
 		0,
-		"No coord data found.",
+		"no coord data found",
 	},
 	testinput{
 		"<!-- {{coord|27|59|16|N|86|56|40|E}} -->",
 		0,
 		0,
-		"No coord data found.",
+		"no coord data found",
 	},
 	testinput{
 		`<!--
@@ -114,7 +114,7 @@ var testdata = []testinput{
 -->`,
 		0,
 		0,
-		"No coord data found.",
+		"no coord data found",
 	},
 }
 

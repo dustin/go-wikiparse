@@ -14,7 +14,8 @@ func init() {
 	fileRE = regexp.MustCompile(`\[File:([^\|\]]+)`)
 }
 
-// Find all the File references from within an article body.
+// FindFiles finds all the File references from within an article
+// body.
 //
 // This includes things in comments, as many I found were commented
 // out.
@@ -30,7 +31,7 @@ func FindFiles(text string) []string {
 	return rv
 }
 
-// Get the wikimedia URL for the given named file.
+// URLForFile gets the wikimedia URL for the given named file.
 func URLForFile(name string) string {
 	m := md5.New()
 	name = strings.Replace(name, " ", "_", -1)

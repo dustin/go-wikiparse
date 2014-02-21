@@ -10,7 +10,7 @@ func init() {
 	linkRE = regexp.MustCompile(`\[\[([^\|\]]+)`)
 }
 
-// Find all the links from within an article body.
+// FindLinks finds all the links from within an article body.
 func FindLinks(text string) []string {
 	cleaned := nowikiRE.ReplaceAllString(commentRE.ReplaceAllString(text, ""), "")
 	matches := linkRE.FindAllStringSubmatch(cleaned, 100000)

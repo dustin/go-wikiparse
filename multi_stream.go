@@ -72,6 +72,7 @@ func multiStreamWorker(src IndexedParseSource, wg *sync.WaitGroup,
 	}
 }
 
+// ReadSeekCloser is io.Reader + io.Closer.
 type ReadSeekCloser interface {
 	io.ReadSeeker
 	io.Closer

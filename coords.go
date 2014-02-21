@@ -11,9 +11,11 @@ import (
 
 var coordRE, nowikiRE, commentRE *regexp.Regexp
 
-var NoCoordFound = errors.New("No coord data found.")
+// ErrNoCoordFound is returned from ParseCoords when there's no
+// coordinate date found.
+var ErrNoCoordFound = errors.New("no coord data found")
 
-var notSexagesimal = errors.New("Not a sexagesimal value")
+var errNotSexagesimal = errors.New("not a sexagesimal value")
 
 func init() {
 	coordRE = regexp.MustCompile(`(?mi){{coord\|(.[^}]*)}}`)
@@ -21,7 +23,7 @@ func init() {
 	commentRE = regexp.MustCompile(`(?ms)<!--.*-->`)
 }
 
-// Longitude/latitude pair from a coordinate match.
+// Coord is Longitude/latitude pair from a coordinate match.
 type Coord struct {
 	Lon float64
 	Lat float64
@@ -56,13 +58,13 @@ func dms(parts []string) (rv float64, err error) {
 
 func parseSexagesimal(parts []string) (Coord, error) {
 	if len(parts) < 8 {
-		return Coord{}, notSexagesimal
+		return Coord{}, errNotSexagesimal
 	}
 	if parts[3] != "N" && parts[3] != "S" {
-		return Coord{}, notSexagesimal
+		return Coord{}, errNotSexagesimal
 	}
 	if parts[7] != "E" && parts[7] != "W" {
-		return Coord{}, notSexagesimal
+		return Coord{}, errNotSexagesimal
 	}
 
 	lat, err := dms(parts[0:4])
@@ -82,7 +84,7 @@ func parseSexagesimal(parts []string) (Coord, error) {
 
 func parseFloat(parts []string) (rv Coord, err error) {
 	if len(parts) < 2 {
-		return Coord{}, NoCoordFound
+		return Coord{}, ErrNoCoordFound
 	}
 
 	offset := 0
@@ -130,16 +132,14 @@ func cleanCoordParts(in []string) []string {
 	return out
 }
 
-/*
-Parses geographical coordinates as specified in
-http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Geographical_coordinates
-*/
+// ParseCoords parses geographical coordinates as specified in
+// http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Geographical_coordinates
 func ParseCoords(text string) (rv Coord, err error) {
 	cleaned := nowikiRE.ReplaceAllString(commentRE.ReplaceAllString(text, ""), "")
 	matches := coordRE.FindAllStringSubmatch(cleaned, 1)
 
 	if len(matches) == 0 || len(matches[0]) < 2 {
-		return Coord{}, NoCoordFound
+		return Coord{}, ErrNoCoordFound
 	}
 
 	parts := cleanCoordParts(strings.Split(matches[0][1], "|"))
@@ -151,10 +151,10 @@ func ParseCoords(text string) (rv Coord, err error) {
 
 	if err == nil {
 		if math.Abs(rv.Lat) > 90 {
-			return rv, errors.New(fmt.Sprintf("Invalid latitude: %v", rv.Lat))
+			return rv, fmt.Errorf("invalid latitude: %v", rv.Lat)
 		}
 		if math.Abs(rv.Lon) > 180 {
-			return rv, errors.New(fmt.Sprintf("Invalid longitude: %v", rv.Lon))
+			return rv, fmt.Errorf("invalid longitude: %v", rv.Lon)
 		}
 	} else {
 		rv = Coord{}

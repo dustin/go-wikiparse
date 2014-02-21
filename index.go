@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// An individual article from the index.
+// An IndexEntry is an individual article from the index.
 type IndexEntry struct {
 	StreamOffset int64
 	PageOffset   int
@@ -21,14 +21,14 @@ func (i IndexEntry) String() string {
 		i.StreamOffset, i.PageOffset, i.ArticleName)
 }
 
-// A wikipedia multistream index reader.
+// An IndexReader is a wikipedia multistream index reader.
 type IndexReader struct {
 	r          *bufio.Reader
 	base       int64
 	prevOffset int64
 }
 
-// Get the next entry from the index stream.
+// Next gets the next entry from the index stream.
 //
 // This assumes the numbers were meant to be incremental.
 func (ir *IndexReader) Next() (rv IndexEntry, err error) {
@@ -37,11 +37,11 @@ func (ir *IndexReader) Next() (rv IndexEntry, err error) {
 		return rv, err
 	}
 	if isPrefix {
-		return rv, errors.New("Partial read")
+		return rv, errors.New("partial read")
 	}
 	parts := strings.SplitN(string(lb), ":", 3)
 	if len(parts) != 3 {
-		return rv, errors.New("Bad record")
+		return rv, errors.New("bad record")
 	}
 	rv.ArticleName = parts[2]
 	offset, err := strconv.ParseInt(parts[0], 10, 64)
@@ -62,12 +62,12 @@ func (ir *IndexReader) Next() (rv IndexEntry, err error) {
 	return rv, nil
 }
 
-// Get a wikipedia index reader.
+// NewIndexReader gets a wikipedia index reader.
 func NewIndexReader(r io.Reader) *IndexReader {
 	return &IndexReader{r: bufio.NewReader(r)}
 }
 
-// Get offsets and counts from an index.
+// IndexSummaryReader gets offsets and counts from an index.
 //
 // If you don't want to know the individual articles, just how many
 // and where, this is for you.
@@ -77,7 +77,8 @@ type IndexSummaryReader struct {
 	count      int
 }
 
-// Get a new IndexSummaryReader from the given stream of index lines.
+// NewIndexSummaryReader gets a new IndexSummaryReader from the given
+// stream of index lines.
 func NewIndexSummaryReader(r io.Reader) (rv *IndexSummaryReader, err error) {
 	rv = &IndexSummaryReader{index: NewIndexReader(r)}
 	first, err := rv.index.Next()
@@ -90,7 +91,7 @@ func NewIndexSummaryReader(r io.Reader) (rv *IndexSummaryReader, err error) {
 	return rv, nil
 }
 
-// Get the next offset and count from the index summary reader.
+// Next gets the next offset and count from the index summary reader.
 //
 // Note that the last returns io.EOF as an error, but a valid offset
 // and count.
