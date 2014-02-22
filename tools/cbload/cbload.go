@@ -32,7 +32,7 @@ func usage() {
 	os.Exit(1)
 }
 
-type Geo struct {
+type geo struct {
 	Geometry struct {
 		Type        string    `json:"type"`
 		Coordinates []float64 `json:"coordinates"`
@@ -40,32 +40,32 @@ type Geo struct {
 	Type string `json:"type"`
 }
 
-type Article struct {
+type article struct {
 	RevInfo struct {
 		ID            uint64 `json:"id"`
 		Timestamp     string `json:"timestamp"`
 		Contributor   string `json:"contributor"`
-		ContributorId uint64 `json:"contributorid"`
+		ContributorID uint64 `json:"contributorid"`
 		Comment       string `json:"comment"`
 	} `json:"revinfo"`
 	Text  string   `json:"text"`
-	Geo   *Geo     `json:"geo,omitempty"`
+	Geo   *geo     `json:"geo,omitempty"`
 	Files []string `json:"files,omitempty"`
 	Links []string `json:"links,omitempty"`
 }
 
 func doPage(db *couchbase.Bucket, p *wikiparse.Page) {
-	article := Article{Text: p.Revisions[0].Text}
+	article := article{Text: p.Revisions[0].Text}
 	gl, err := wikiparse.ParseCoords(p.Revisions[0].Text)
 	if err == nil {
-		article.Geo = &Geo{Type: "Feature"}
+		article.Geo = &geo{Type: "Feature"}
 		article.Geo.Geometry.Type = "Point"
 		article.Geo.Geometry.Coordinates = []float64{gl.Lon, gl.Lat}
 	}
 	article.RevInfo.ID = p.Revisions[0].ID
 	article.RevInfo.Timestamp = p.Revisions[0].Timestamp
 	article.RevInfo.Contributor = p.Revisions[0].Contributor.Username
-	article.RevInfo.ContributorId = p.Revisions[0].Contributor.ID
+	article.RevInfo.ContributorID = p.Revisions[0].Contributor.ID
 	article.RevInfo.Comment = p.Revisions[0].Comment
 	article.Files = wikiparse.FindFiles(article.Text)
 	article.Links = wikiparse.FindLinks(article.Text)

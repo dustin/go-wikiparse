@@ -16,7 +16,7 @@ import (
 
 var wg sync.WaitGroup
 
-type Geo struct {
+type geo struct {
 	Geometry struct {
 		Type        string    `json:"type"`
 		Coordinates []float64 `json:"coordinates"`
@@ -24,18 +24,18 @@ type Geo struct {
 	Type string `json:"type"`
 }
 
-type Article struct {
+type article struct {
 	ID      string `json:"_id"`
 	Rev     string `json:"_rev"`
 	RevInfo struct {
 		ID            uint64 `json:"id"`
 		Timestamp     string `json:"timestamp"`
 		Contributor   string `json:"contributor"`
-		ContributorId uint64 `json:"contributorid"`
+		ContributorID uint64 `json:"contributorid"`
 		Comment       string `json:"comment"`
 	} `json:"revinfo"`
 	Text  string   `json:"text"`
-	Geo   *Geo     `json:"geo,omitempty"`
+	Geo   *geo     `json:"geo,omitempty"`
 	Files []string `json:"files,omitempty"`
 	Links []string `json:"links,omitempty"`
 }
@@ -45,9 +45,9 @@ func escapeTitle(in string) string {
 		"+", "%2b", -1)
 }
 
-func resolveConflict(db *couch.Database, a *Article) {
+func resolveConflict(db *couch.Database, a *article) {
 	log.Printf("Resolving conflict on %s", a.ID)
-	var prev Article
+	var prev article
 	err := db.Retrieve(escapeTitle(a.ID), &prev)
 	if err != nil {
 		log.Printf("  Error retrieving existing %v: %v", a.ID, err)
@@ -68,32 +68,32 @@ func resolveConflict(db *couch.Database, a *Article) {
 
 func doPage(db *couch.Database, p *wikiparse.Page) {
 	defer wg.Done()
-	article := Article{}
+	a := article{}
 	gl, err := wikiparse.ParseCoords(p.Revisions[0].Text)
 	if err == nil {
-		article.Geo = &Geo{Type: "Feature"}
-		article.Geo.Geometry.Type = "Point"
-		article.Geo.Geometry.Coordinates = []float64{gl.Lon, gl.Lat}
+		a.Geo = &geo{Type: "Feature"}
+		a.Geo.Geometry.Type = "Point"
+		a.Geo.Geometry.Coordinates = []float64{gl.Lon, gl.Lat}
 	}
-	article.RevInfo.ID = p.Revisions[0].ID
-	article.RevInfo.Timestamp = p.Revisions[0].Timestamp
-	article.RevInfo.Contributor = p.Revisions[0].Contributor.Username
-	article.RevInfo.ContributorId = p.Revisions[0].Contributor.ID
-	article.RevInfo.Comment = p.Revisions[0].Comment
-	article.Text = p.Revisions[0].Text
-	article.ID = escapeTitle(p.Title)
-	article.Files = wikiparse.FindFiles(article.Text)
-	article.Links = wikiparse.FindLinks(article.Text)
+	a.RevInfo.ID = p.Revisions[0].ID
+	a.RevInfo.Timestamp = p.Revisions[0].Timestamp
+	a.RevInfo.Contributor = p.Revisions[0].Contributor.Username
+	a.RevInfo.ContributorID = p.Revisions[0].Contributor.ID
+	a.RevInfo.Comment = p.Revisions[0].Comment
+	a.Text = p.Revisions[0].Text
+	a.ID = escapeTitle(p.Title)
+	a.Files = wikiparse.FindFiles(a.Text)
+	a.Links = wikiparse.FindLinks(a.Text)
 
-	_, _, err = db.Insert(&article)
-	httpe, isHttpError := err.(*couch.HTTPError)
+	_, _, err = db.Insert(&a)
+	httpe, isHTTPError := err.(*couch.HTTPError)
 	switch {
 	case err == nil:
 		// yay
-	case isHttpError && httpe.Status == 409:
-		resolveConflict(db, &article)
+	case isHTTPError && httpe.Status == 409:
+		resolveConflict(db, &a)
 	default:
-		log.Printf("Error inserting %#v: %v", article, err)
+		log.Printf("Error inserting %#v: %v", a, err)
 	}
 }
 
