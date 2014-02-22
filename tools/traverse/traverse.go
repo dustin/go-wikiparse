@@ -26,7 +26,7 @@ func parsePageCoords(p *wikiparse.Page, cherr chan<- *wikiparse.Page) {
 	if err == nil {
 		// log.Printf("Found geo data in %q: %#v", p.Title, gl)
 	} else {
-		if err != wikiparse.NoCoordFound {
+		if err != wikiparse.ErrNoCoordFound {
 			cherr <- p
 			log.Printf("Error parsing geo from %#v: %v", *p, err)
 		}
