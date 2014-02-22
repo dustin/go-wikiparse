@@ -1,4 +1,3 @@
-// Package wikiparse is library to understand the wikipedia xml dump format.
 package wikiparse
 
 import (
