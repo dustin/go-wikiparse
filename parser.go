@@ -1,4 +1,4 @@
-// A library to understand the wikipedia xml dump format.
+// Package wikiparse is library to understand the wikipedia xml dump format.
 package wikiparse
 
 import (
@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-// The toplevel site info describing basic dump properties.
+// SiteInfo is the toplevel site info describing basic dump properties.
 type SiteInfo struct {
 	SiteName   string `xml:"sitename"`
 	Base       string `xml:"base"`
@@ -19,13 +19,13 @@ type SiteInfo struct {
 	} `xml:"namespaces>namespace"`
 }
 
-// A user who contributed a revision.
+// A Contributor is a user who contributed a revision.
 type Contributor struct {
 	ID       uint64 `xml:"id"`
 	Username string `xml:"username"`
 }
 
-// A revision to a page.
+// A Revision to a page.
 type Revision struct {
 	ID          uint64      `xml:"id"`
 	Timestamp   string      `xml:"timestamp"`
@@ -34,14 +34,14 @@ type Revision struct {
 	Text        string      `xml:"text"`
 }
 
-// A wiki page.
+// A Page in the wiki.
 type Page struct {
 	Title     string     `xml:"title"`
 	ID        uint64     `xml:"id"`
 	Revisions []Revision `xml:"revision"`
 }
 
-// That which emits wiki pages.
+// A Parser emits wiki pages.
 type Parser interface {
 	// Get the next page from the parser
 	Next() (*Page, error)
@@ -54,7 +54,8 @@ type singleStreamParser struct {
 	x        *xml.Decoder
 }
 
-// Get a wikipedia dump parser reading from the given reader.
+// NewParser gets a wikipedia dump parser reading from the given
+// reader.
 func NewParser(r io.Reader) (Parser, error) {
 	d := xml.NewDecoder(r)
 	_, err := d.Token()

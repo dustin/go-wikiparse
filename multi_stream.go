@@ -78,6 +78,11 @@ type ReadSeekCloser interface {
 	io.Closer
 }
 
+// An IndexedParseSource provides access to a multistream xml dump and
+// its index.
+//
+// This is typically downloaded as two files, but a seekable interface
+// such as HTTP with range requests can also serve.
 type IndexedParseSource interface {
 	OpenIndex() (io.ReadCloser, error)
 	OpenData() (ReadSeekCloser, error)
@@ -95,6 +100,8 @@ func (f filesSource) OpenData() (ReadSeekCloser, error) {
 	return os.Open(f.datafile)
 }
 
+// NewIndexedParserFromSrc creates a Parser that can parse multiple
+// pages concurrently from a single source.
 func NewIndexedParserFromSrc(src IndexedParseSource, numWorkers int) (Parser, error) {
 	r, err := src.OpenData()
 	if err != nil {
@@ -144,7 +151,8 @@ func NewIndexedParserFromSrc(src IndexedParseSource, numWorkers int) (Parser, er
 	return rv, nil
 }
 
-// Get a wikipedia dump parser reading from the given reader.
+// NewIndexedParser gets an indexed/parallel wikipedia dump parser
+// from the given index and data files.
 func NewIndexedParser(indexfn, datafn string, numWorkers int) (Parser, error) {
 	return NewIndexedParserFromSrc(filesSource{indexfn, datafn}, numWorkers)
 }
