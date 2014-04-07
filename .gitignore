@@ -3,6 +3,6 @@
 /tools/cbload/cbload
 /tools/couchload/couchload
 /tools/indexfix/indexfix
+/tools/mgoload/mgoload
 /tools/traverse/errors.gob
 /tools/traverse/traverse
-tools/mgoload/mgoload
