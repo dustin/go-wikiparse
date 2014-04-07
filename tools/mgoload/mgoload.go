@@ -52,7 +52,6 @@ func pageHandler(db *mgo.Database, ch <-chan *wikiparse.Page) {
 	for p := range ch {
 		makeArticle(db, p)
 	}
-	wg.Done()
 }
 
 func makeArticle(db *mgo.Database, p *wikiparse.Page) {
@@ -77,10 +76,11 @@ func makeArticle(db *mgo.Database, p *wikiparse.Page) {
 			log.Printf("Error inserting %s: %s", a.Title, err)
 		}
 	}
+	wg.Done()
 }
 
 func processDump(p wikiparse.Parser, db *mgo.Database) {
-	ch := make(chan *wikiparse.Page, 10000)
+	ch := make(chan *wikiparse.Page, 1000)
 	for i := 0; i < *proc; i++ {
 		go pageHandler(db, ch)
 	}
@@ -88,7 +88,7 @@ func processDump(p wikiparse.Parser, db *mgo.Database) {
 	pages := int64(0)
 	start := time.Now()
 	prev := start
-	reportfreq := int64(1000)
+	reportfreq := int64(10000)
 	var err error
 	for err == nil {
 		var page *wikiparse.Page
@@ -101,8 +101,8 @@ func processDump(p wikiparse.Parser, db *mgo.Database) {
 		if pages%reportfreq == 0 {
 			now := time.Now()
 			d := now.Sub(prev)
-			log.Printf("Processed %s pages total (%.2f/s): Queue Len: %d",
-				humanize.Comma(pages), float64(reportfreq)/d.Seconds(), len(ch))
+			log.Printf("Processed %s pages total (%.2f/s)\n",
+				humanize.Comma(pages), float64(reportfreq)/d.Seconds())
 			prev = now
 		}
 	}
