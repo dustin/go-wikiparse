@@ -35,19 +35,19 @@ var titleIndex = mgo.Index{
 }
 
 type article struct {
-	ID      string "_id,omitempty"
-	Title   string ",omitempty"
-	Rev     string ",omitempty"
+	ID      string `bson:"_id,omitempty"`
+	Title   string `bson:",omitempty"`
+	Rev     string `bson:",omitempty"`
 	RevInfo struct {
-		ID            uint64 ",omitempty"
-		Timestamp     string ",omitempty"
-		Contributor   string ",omitempty"
-		ContributorID uint64 ",omitempty"
-		Comment       string ",omitempty"
+		ID            uint64 `bson:",omitempty"`
+		Timestamp     string `bson:",omitempty"`
+		Contributor   string `bson:",omitempty"`
+		ContributorID uint64 `bson:",omitempty"`
+		Comment       string `bson:",omitempty"`
 	}
-	Text  string   ",omitempty"
-	Files []string ",omitempty"
-	Links []string ",omitempty"
+	Text  string   `bson:",omitempty"`
+	Files []string `bson:",omitempty"`
+	Links []string `bson:",omitempty"`
 }
 
 func pageHandler(db *mgo.Database, ch <-chan *wikiparse.Page) {
