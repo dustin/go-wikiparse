@@ -14,11 +14,13 @@ import (
 	"labix.org/v2/mgo"
 )
 
-var proc = flag.Int("proc", 8, "How many processes to run")
-var file = flag.String("file", "", "The bz2 dump file")
-var cpus = flag.Int("cpus", runtime.NumCPU(), "Number of CPUs to use")
-var dburl = flag.String("dburl", "localhost", "The dburl(s). I.e. localhost")
+var proc = flag.Int("proc", 8, "How many processes to run.")
+var file = flag.String("file", "", "The bz2 dump file.")
+var cpus = flag.Int("cpus", runtime.NumCPU(), "Number of CPUs to use.")
+var dburl = flag.String("dburl", "localhost", "The dburl(s). I.e. localhost.")
 var verbose = flag.Bool("v", false, "Verbose logging?")
+var collection = flag.String("collection", "articles", "The collection to store dumped articles in.")
+var dbname = flag.String("dbname", "wp", "The database name to use.")
 
 var wg sync.WaitGroup
 
@@ -33,11 +35,11 @@ var titleIndex = mgo.Index{
 }
 
 type article struct {
-	ID      string `json:"_id", omitempty`
-	Title   string `"json: title"`
-	Rev     string `"json: rev"`
+	ID      string "_id,omitempty"
+	Title   string ",omitempty"
+	Rev     string ",omitempty"
 	RevInfo struct {
-		ID            uint64 "json: id,omitempty"
+		ID            uint64 ",omitempty"
 		Timestamp     string ",omitempty"
 		Contributor   string ",omitempty"
 		ContributorID uint64 ",omitempty"
@@ -66,7 +68,7 @@ func makeArticle(db *mgo.Database, p *wikiparse.Page) {
 	a.Text = p.Revisions[0].Text
 	a.Links = wikiparse.FindLinks(a.Text)
 	a.Files = wikiparse.FindFiles(a.Text)
-	err := db.C("articles").Insert(&a)
+	err := db.C(*collection).Insert(&a)
 	if err != nil {
 		if mgo.IsDup(err) {
 			if *verbose == true {
@@ -137,9 +139,9 @@ func main() {
 		log.Fatalf("Error setting up new page parser:  %v", err)
 	}
 
-	err = session.DB("wp").C("articles").EnsureIndex(titleIndex)
+	err = session.DB(*dbname).C(*collection).EnsureIndex(titleIndex)
 	if err != nil {
 		log.Fatal("Error creating title index", err)
 	}
-	processDump(p, session.DB("wp"))
+	processDump(p, session.DB(*dbname))
 }
