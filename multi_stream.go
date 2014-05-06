@@ -23,7 +23,6 @@ type multiStreamParser struct {
 
 func multiStreamIndexWorker(r io.ReadCloser, p *multiStreamParser) {
 	defer close(p.workerch)
-
 	defer r.Close()
 
 	bz := bzip2.NewReader(r)
@@ -139,7 +138,6 @@ func NewIndexedParserFromSrc(src IndexedParseSource, numWorkers int) (Parser, er
 	if err != nil {
 		log.Fatalf("Error opening index: %v", err)
 	}
-	defer ridx.Close()
 
 	go multiStreamIndexWorker(ridx, rv)
 
