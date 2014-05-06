@@ -34,11 +34,11 @@ func parsePageCoords(p *wikiparse.Page, cherr chan<- *wikiparse.Page) {
 }
 
 func pageHandler(ch <-chan *wikiparse.Page, cherr chan<- *wikiparse.Page) {
+	defer wg.Done()
 	for p := range ch {
 		if parseCoords {
 			parsePageCoords(p, cherr)
 		}
-		wg.Done()
 	}
 }
 
@@ -48,7 +48,6 @@ func parsePage(d *xml.Decoder, ch chan<- *wikiparse.Page) error {
 	if err != nil {
 		return err
 	}
-	wg.Add(1)
 	ch <- &page
 	return nil
 }
@@ -77,6 +76,7 @@ func process(p wikiparse.Parser) {
 	cherr := make(chan *wikiparse.Page, 10)
 
 	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
 		go pageHandler(ch, cherr)
 	}
 
@@ -88,13 +88,13 @@ func process(p wikiparse.Parser) {
 	prev := start
 	reportfreq := int64(1000)
 	var err error
-	for err == nil {
+	for {
 		var page *wikiparse.Page
 		page, err = p.Next()
-		if err == nil {
-			wg.Add(1)
-			ch <- page
+		if err != nil {
+			break
 		}
+		ch <- page
 
 		pages++
 		if pages%reportfreq == 0 {
@@ -105,8 +105,8 @@ func process(p wikiparse.Parser) {
 			prev = now
 		}
 	}
-	wg.Wait()
 	close(ch)
+	wg.Wait()
 	close(cherr)
 	errwg.Wait()
 	d := time.Since(start)
