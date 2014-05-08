@@ -134,7 +134,7 @@ func cleanCoordParts(in []string) []string {
 
 // ParseCoords parses geographical coordinates as specified in
 // http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Geographical_coordinates
-func ParseCoords(text string) (rv Coord, err error) {
+func ParseCoords(text string) (Coord, error) {
 	cleaned := nowikiRE.ReplaceAllString(commentRE.ReplaceAllString(text, ""), "")
 	matches := coordRE.FindAllStringSubmatch(cleaned, 1)
 
@@ -144,7 +144,7 @@ func ParseCoords(text string) (rv Coord, err error) {
 
 	parts := cleanCoordParts(strings.Split(matches[0][1], "|"))
 
-	rv, err = parseSexagesimal(parts)
+	rv, err := parseSexagesimal(parts)
 	if err != nil {
 		rv, err = parseFloat(parts)
 	}

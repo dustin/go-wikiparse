@@ -155,13 +155,12 @@ func NewIndexedParser(indexfn, datafn string, numWorkers int) (Parser, error) {
 	return NewIndexedParserFromSrc(filesSource{indexfn, datafn}, numWorkers)
 }
 
-func (p *multiStreamParser) Next() (rv *Page, err error) {
-	var ok bool
-	rv, ok = <-p.entries
+func (p *multiStreamParser) Next() (*Page, error) {
+	rv, ok := <-p.entries
 	if !ok {
 		return nil, io.EOF
 	}
-	return
+	return rv, nil
 }
 
 func (p *multiStreamParser) SiteInfo() SiteInfo {

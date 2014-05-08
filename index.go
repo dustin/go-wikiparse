@@ -31,22 +31,22 @@ type IndexReader struct {
 // Next gets the next entry from the index stream.
 //
 // This assumes the numbers were meant to be incremental.
-func (ir *IndexReader) Next() (rv IndexEntry, err error) {
+func (ir *IndexReader) Next() (IndexEntry, error) {
 	lb, isPrefix, err := ir.r.ReadLine()
 	if err != nil {
-		return rv, err
+		return IndexEntry{}, err
 	}
 	if isPrefix {
-		return rv, errors.New("partial read")
+		return IndexEntry{}, errors.New("partial read")
 	}
 	parts := strings.SplitN(string(lb), ":", 3)
 	if len(parts) != 3 {
-		return rv, errors.New("bad record")
+		return IndexEntry{}, errors.New("bad record")
 	}
-	rv.ArticleName = parts[2]
+	rv := IndexEntry{ArticleName: parts[2]}
 	offset, err := strconv.ParseInt(parts[0], 10, 64)
 	if err != nil {
-		return rv, err
+		return IndexEntry{}, err
 	}
 	if offset < ir.prevOffset {
 		ir.base += (1 << 32)
@@ -54,7 +54,7 @@ func (ir *IndexReader) Next() (rv IndexEntry, err error) {
 	rv.StreamOffset = offset + ir.base
 	i, err := strconv.ParseInt(parts[1], 10, 32)
 	if err != nil {
-		return rv, err
+		return IndexEntry{}, err
 	}
 	rv.PageOffset = int(i)
 	ir.prevOffset = offset

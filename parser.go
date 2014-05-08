@@ -74,10 +74,9 @@ func NewParser(r io.Reader) (Parser, error) {
 	}, nil
 }
 
-func (p *singleStreamParser) Next() (rv *Page, err error) {
-	rv = &Page{}
-	err = p.x.Decode(rv)
-	return
+func (p *singleStreamParser) Next() (*Page, error) {
+	rv := &Page{}
+	return rv, p.x.Decode(rv)
 }
 
 func (p *singleStreamParser) SiteInfo() SiteInfo {
