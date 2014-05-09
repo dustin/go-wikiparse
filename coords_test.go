@@ -166,3 +166,26 @@ func TestCoordMultiline(t *testing.T) {
 		testOne(t, ti, input)
 	}
 }
+
+func TestDMS(t *testing.T) {
+	tests := []struct {
+		input   []string
+		exp     float64
+		success bool
+	}{
+		{nil, 0, false},
+		{[]string{"x", "0", "0", "0"}, 0, false},
+		{[]string{"0", "x", "0", "0"}, 0, false},
+		{[]string{"0", "0", "x", "0"}, 0, false},
+		{[]string{"0", "0", "0", "0"}, 0, true},
+	}
+
+	for _, test := range tests {
+		f, err := dms(test.input)
+		if test.success && err != nil {
+			t.Errorf("Unexpected failure on %v: %v", test.input, err)
+		} else if test.success && f != test.exp {
+			t.Errorf("Expected %v for %v, got %v", test.exp, test.input, f)
+		}
+	}
+}

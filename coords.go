@@ -29,31 +29,29 @@ type Coord struct {
 	Lat float64
 }
 
-func dms(parts []string) (rv float64, err error) {
+func dms(parts []string) (float64, error) {
 	if len(parts) != 4 {
-		panic(fmt.Sprintf("Wrong number of elements: %#v", parts))
+		return 0, fmt.Errorf("Wrong number of elements: %#v", parts)
 	}
-	var f float64
-	f, err = strconv.ParseFloat(parts[0], 64)
+	rv, err := strconv.ParseFloat(parts[0], 64)
 	if err != nil {
-		return
+		return rv, err
 	}
-	rv = f
-	f, err = strconv.ParseFloat(parts[1], 64)
+	f, err := strconv.ParseFloat(parts[1], 64)
 	if err != nil {
-		return
+		return rv, err
 	}
 	rv += f / 60.0
 	f, err = strconv.ParseFloat(parts[2], 64)
 	if err != nil {
-		return
+		return rv, err
 	}
 	rv += f / 3600.0
 
 	if parts[3] == "S" || parts[3] == "W" {
 		rv = -rv
 	}
-	return
+	return rv, err
 }
 
 func parseSexagesimal(parts []string) (Coord, error) {
