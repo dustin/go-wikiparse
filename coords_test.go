@@ -116,6 +116,28 @@ var testdata = []testinput{
 		0,
 		"no coord data found",
 	},
+	// The following two fall back onto float parsing
+	testinput{
+		"{{coord|27|59|16|J|86|56|40|E}}",
+		27,
+		59,
+		"",
+	},
+	testinput{
+		"{{coord|27|59|16|N|86|56|40|J}}",
+		27,
+		59,
+		"",
+	},
+	// And this should fail dms, but coverage suggests it doesn't
+	/*
+		testinput{
+			"{{coord|foo|59|foo|N|86|56|40|S}}",
+			59,
+			0,
+			`strconv.ParseFloat: parsing "foo": invalid syntax`,
+		},
+	*/
 }
 
 func assertEpsilon(t *testing.T, input, field string, expected, got float64) {
@@ -135,7 +157,7 @@ func testOne(t *testing.T, ti testinput, input string) {
 	case err == nil && ti.err == "":
 		// ok
 	case err == nil && ti.err != "":
-		t.Fatalf("Expected error %q on %v", ti.err, input)
+		t.Fatalf("Expected error %q on %v, got %v", ti.err, input, coord)
 	default:
 		t.Fatalf("Wanted %v,%v with error %v, got %#v with error %v",
 			ti.lat, ti.lon, ti.err, coord, err)

@@ -147,15 +147,11 @@ func ParseCoords(text string) (Coord, error) {
 		rv, err = parseFloat(parts)
 	}
 
-	if err == nil {
-		if math.Abs(rv.Lat) > 90 {
-			return rv, fmt.Errorf("invalid latitude: %v", rv.Lat)
-		}
-		if math.Abs(rv.Lon) > 180 {
-			return rv, fmt.Errorf("invalid longitude: %v", rv.Lon)
-		}
-	} else {
-		rv = Coord{}
+	if math.Abs(rv.Lat) > 90 {
+		return rv, fmt.Errorf("invalid latitude: %v", rv.Lat)
+	}
+	if math.Abs(rv.Lon) > 180 {
+		return rv, fmt.Errorf("invalid longitude: %v", rv.Lon)
 	}
 
 	return rv, err
