@@ -80,23 +80,26 @@ func parseSexagesimal(parts []string) (Coord, error) {
 	return rv, err
 }
 
-func parseFloat(parts []string) (rv Coord, err error) {
+func parseFloat(parts []string) (Coord, error) {
+	rv := Coord{}
+	var err error
 	if len(parts) < 2 {
-		return Coord{}, ErrNoCoordFound
+		return rv, ErrNoCoordFound
 	}
 
 	offset := 0
 
 	rv.Lat, err = strconv.ParseFloat(parts[offset], 64)
 	if err != nil {
-		return
+		return rv, err
 	}
 	offset++
 
-	if parts[offset] == "S" {
+	switch parts[offset] {
+	case "S":
 		rv.Lat = -rv.Lat
-		offset++
-	} else if parts[offset] == "N" {
+		fallthrough
+	case "N":
 		offset++
 	}
 
@@ -105,7 +108,7 @@ func parseFloat(parts []string) (rv Coord, err error) {
 	if len(parts) > offset && parts[offset] == "W" {
 		rv.Lon = -rv.Lon
 	}
-	return
+	return rv, err
 }
 
 func cleanCoordParts(in []string) []string {
