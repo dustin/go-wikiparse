@@ -38,6 +38,9 @@ func TestIndexReader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error parsing first entry: %v", err)
 	}
+	if e.String() != "499:10:AccessibleComputing" {
+		t.Errorf("Error stringing first entry, got %v", e)
+	}
 
 	for {
 		var tmp IndexEntry
