@@ -31,8 +31,7 @@ const testData = `499:10:AccessibleComputing
 const lastChunk = 2147498001
 
 func TestIndexReader(t *testing.T) {
-	r := strings.NewReader(testData)
-	ir := NewIndexReader(r)
+	ir := NewIndexReader(strings.NewReader(testData))
 
 	e, err := ir.Next()
 	if err != nil {

@@ -23,7 +23,7 @@ func (i IndexEntry) String() string {
 
 // An IndexReader is a wikipedia multistream index reader.
 type IndexReader struct {
-	r          *bufio.Reader
+	r          *bufio.Scanner
 	base       int64
 	prevOffset int64
 }
@@ -32,14 +32,14 @@ type IndexReader struct {
 //
 // This assumes the numbers were meant to be incremental.
 func (ir *IndexReader) Next() (IndexEntry, error) {
-	lb, isPrefix, err := ir.r.ReadLine()
-	if err != nil {
+	if !ir.r.Scan() {
+		err := ir.r.Err()
+		if err == nil {
+			err = io.EOF
+		}
 		return IndexEntry{}, err
 	}
-	if isPrefix {
-		return IndexEntry{}, errors.New("partial read")
-	}
-	parts := strings.SplitN(string(lb), ":", 3)
+	parts := strings.SplitN(ir.r.Text(), ":", 3)
 	if len(parts) != 3 {
 		return IndexEntry{}, errors.New("bad record")
 	}
@@ -64,7 +64,7 @@ func (ir *IndexReader) Next() (IndexEntry, error) {
 
 // NewIndexReader gets a wikipedia index reader.
 func NewIndexReader(r io.Reader) *IndexReader {
-	return &IndexReader{r: bufio.NewReader(r)}
+	return &IndexReader{r: bufio.NewScanner(r)}
 }
 
 // IndexSummaryReader gets offsets and counts from an index.
