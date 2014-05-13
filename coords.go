@@ -25,8 +25,7 @@ func init() {
 
 // Coord is Longitude/latitude pair from a coordinate match.
 type Coord struct {
-	Lon float64
-	Lat float64
+	Lon, Lat float64
 }
 
 func dms(parts []string) (float64, error) {
@@ -82,13 +81,13 @@ func parseSexagesimal(parts []string) (Coord, error) {
 
 func parseFloat(parts []string) (Coord, error) {
 	rv := Coord{}
-	var err error
 	if len(parts) < 2 {
 		return rv, ErrNoCoordFound
 	}
 
 	offset := 0
 
+	var err error
 	rv.Lat, err = strconv.ParseFloat(parts[offset], 64)
 	if err != nil {
 		return rv, err
