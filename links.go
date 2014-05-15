@@ -13,9 +13,9 @@ func init() {
 // FindLinks finds all the links from within an article body.
 func FindLinks(text string) []string {
 	cleaned := nowikiRE.ReplaceAllString(commentRE.ReplaceAllString(text, ""), "")
-	matches := linkRE.FindAllStringSubmatch(cleaned, 100000)
+	matches := linkRE.FindAllStringSubmatch(cleaned, -1)
 
-	rv := []string{}
+	rv := make([]string, 0, len(matches))
 	for _, x := range matches {
 		rv = append(rv, x[1])
 	}
