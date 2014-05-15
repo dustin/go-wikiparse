@@ -3,8 +3,71 @@ package wikiparse
 import (
 	"bytes"
 	"encoding/xml"
+	"strings"
 	"testing"
 )
+
+const exemplar = `<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.8/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.8/ http://www.mediawiki.org/xml/export-0.8.xsd" version="0.8" xml:lang="en">
+  <siteinfo>
+    <sitename>Wikipedia</sitename>
+    <base>http://en.wikipedia.org/wiki/Main_Page</base>
+    <generator>MediaWiki 1.24wmf2</generator>
+    <case>first-letter</case>
+    <namespaces>
+      <namespace key="-2" case="first-letter">Media</namespace>
+      <namespace key="-1" case="first-letter">Special</namespace>
+      <namespace key="0" case="first-letter" />
+      <namespace key="1" case="first-letter">Talk</namespace>
+      <namespace key="2" case="first-letter">User</namespace>
+      <namespace key="3" case="first-letter">User talk</namespace>
+      <namespace key="4" case="first-letter">Wikipedia</namespace>
+      <namespace key="5" case="first-letter">Wikipedia talk</namespace>
+      <namespace key="6" case="first-letter">File</namespace>
+      <namespace key="7" case="first-letter">File talk</namespace>
+      <namespace key="8" case="first-letter">MediaWiki</namespace>
+      <namespace key="9" case="first-letter">MediaWiki talk</namespace>
+      <namespace key="10" case="first-letter">Template</namespace>
+      <namespace key="11" case="first-letter">Template talk</namespace>
+      <namespace key="12" case="first-letter">Help</namespace>
+      <namespace key="13" case="first-letter">Help talk</namespace>
+      <namespace key="14" case="first-letter">Category</namespace>
+      <namespace key="15" case="first-letter">Category talk</namespace>
+      <namespace key="100" case="first-letter">Portal</namespace>
+      <namespace key="101" case="first-letter">Portal talk</namespace>
+      <namespace key="108" case="first-letter">Book</namespace>
+      <namespace key="109" case="first-letter">Book talk</namespace>
+      <namespace key="118" case="first-letter">Draft</namespace>
+      <namespace key="119" case="first-letter">Draft talk</namespace>
+      <namespace key="446" case="first-letter">Education Program</namespace>
+      <namespace key="447" case="first-letter">Education Program talk</namespace>
+      <namespace key="710" case="first-letter">TimedText</namespace>
+      <namespace key="711" case="first-letter">TimedText talk</namespace>
+      <namespace key="828" case="first-letter">Module</namespace>
+      <namespace key="829" case="first-letter">Module talk</namespace>
+    </namespaces>
+  </siteinfo>
+  <page>
+    <title>AccessibleComputing</title>
+    <ns>0</ns>
+    <id>10</id>
+    <redirect title="Computer accessibility" />
+    <revision>
+      <id>381202555</id>
+      <parentid>381200179</parentid>
+      <timestamp>2010-08-26T22:38:36Z</timestamp>
+      <contributor>
+        <username>OlEnglish</username>
+        <id>7181920</id>
+      </contributor>
+      <minor />
+      <comment>[[Help:Reverting|Reverted]] edits by [[Special:Contributions/76.28.186.133|76.28.186.133]] ([[User talk:76.28.186.133|talk]]) to last version by Gurch</comment>
+      <text xml:space="preserve">#REDIRECT [[Computer accessibility]] {{R from CamelCase}}</text>
+      <sha1>lo15ponaybcg2sf49sstw9gdjmdetnk</sha1>
+      <model>wikitext</model>
+      <format>text/x-wiki</format>
+    </revision>
+  </page>
+</mediawiki>`
 
 const smaller = `  <page>
     <title>AccessibleComputing</title>
@@ -365,6 +428,41 @@ The [[Internet]] has helped autistic individuals bypass nonverbal cues and emoti
     </revision>
   </page>
 `
+
+func TestParserBroken(t *testing.T) {
+	p, err := NewParser(bytes.NewReader(nil))
+	if err == nil {
+		t.Fatalf("Expected failure opening bad xml, got %v", p)
+	}
+}
+
+func TestParserSemiBroken(t *testing.T) {
+	p, err := NewParser(strings.NewReader(`<?xml version="1.0"?>`))
+	if err == nil {
+		t.Fatalf("Expected failure opening bad xml, got %v", p)
+	}
+}
+
+func TestParserSuccess(t *testing.T) {
+	p, err := NewParser(strings.NewReader(exemplar))
+	if err != nil {
+		t.Fatalf("Error making parser: %v", err)
+	}
+	if p.SiteInfo().SiteName != "Wikipedia" {
+		t.Fatalf("Got the wrong site name: %q", p.SiteInfo().SiteName)
+	}
+	pages := 0
+	for {
+		_, err = p.Next()
+		if err != nil {
+			break
+		}
+		pages++
+	}
+	if pages != 1 {
+		t.Fatalf("Expected one page, got %v", pages)
+	}
+}
 
 func xmld(b *testing.B, doc []byte) {
 	b.SetBytes(int64(len(doc)))
