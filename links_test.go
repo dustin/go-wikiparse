@@ -6,6 +6,7 @@ import (
 )
 
 func TestLinkSearch(t *testing.T) {
+	t.Parallel()
 	exp := []string{"Aplysina archeri",
 		"Robert Edmund Grant",
 		"Robert Bentley Todd",
