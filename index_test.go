@@ -59,6 +59,31 @@ func TestIndexReader(t *testing.T) {
 
 }
 
+func TestBrokenIndex(t *testing.T) {
+	broken := []string{
+		"1:2\n",
+		"one:2:Three\n",
+		"1:Two:Three\n",
+	}
+	for _, test := range broken {
+		ir := NewIndexReader(strings.NewReader(test))
+
+		e, err := ir.Next()
+		if err == nil {
+			t.Errorf("Expected error parsing %q, got %v", test, e)
+		}
+	}
+
+	for _, test := range broken {
+		ir, err := NewIndexSummaryReader(strings.NewReader(test))
+		if err == nil {
+			t.Errorf("Expected error on summary parsing of %q: got %v\n",
+				test, ir)
+			continue
+		}
+	}
+}
+
 func TestIndexSummary(t *testing.T) {
 	r := strings.NewReader(testData)
 	isr, err := NewIndexSummaryReader(r)
