@@ -223,3 +223,16 @@ func TestDMS(t *testing.T) {
 		}
 	}
 }
+
+func TestFloatErrorCases(t *testing.T) {
+	tests := [][]string{
+		[]string{"13"},
+		[]string{"X", "N"},
+	}
+	for _, test := range tests {
+		f, err := parseFloat(test)
+		if err == nil {
+			t.Errorf("expected error for %v, got %v", test, f)
+		}
+	}
+}
