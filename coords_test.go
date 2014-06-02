@@ -236,3 +236,10 @@ func TestFloatErrorCases(t *testing.T) {
 		}
 	}
 }
+
+func TestSexagesimalDMSErr(t *testing.T) {
+	v, err := parseSexagesimal([]string{"0", "X", "0", "N", "0", "0", "0", "W"})
+	if err == nil {
+		t.Fatalf("Expected error parsing junk, got %v", v)
+	}
+}
