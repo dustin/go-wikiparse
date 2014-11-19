@@ -12,6 +12,7 @@ import (
 	"github.com/dustin/go-couch"
 	"github.com/dustin/go-humanize"
 	"github.com/dustin/go-wikiparse"
+	"github.com/dustin/httputil"
 )
 
 var wg sync.WaitGroup
@@ -86,11 +87,10 @@ func doPage(db *couch.Database, p *wikiparse.Page) {
 	a.Links = wikiparse.FindLinks(a.Text)
 
 	_, _, err = db.Insert(&a)
-	httpe, isHTTPError := err.(*couch.HTTPError)
 	switch {
 	case err == nil:
 		// yay
-	case isHTTPError && httpe.Status == 409:
+	case httputil.IsHTTPStatus(err, 409):
 		resolveConflict(db, &a)
 	default:
 		log.Printf("Error inserting %#v: %v", a, err)
