@@ -38,6 +38,7 @@ type Page struct {
 	Title     string     `xml:"title"`
 	ID        uint64     `xml:"id"`
 	Revisions []Revision `xml:"revision"`
+	Ns        uint64     `xml:"ns"`
 }
 
 // A Parser emits wiki pages.
