@@ -24,6 +24,11 @@ type Contributor struct {
 	Username string `xml:"username"`
 }
 
+// A Redirect to another Page.
+type Redirect struct {
+	Title string `xml:"title,attr"`
+}
+
 // A Revision to a page.
 type Revision struct {
 	ID          uint64      `xml:"id"`
@@ -37,6 +42,7 @@ type Revision struct {
 type Page struct {
 	Title     string     `xml:"title"`
 	ID        uint64     `xml:"id"`
+	Redir     Redirect   `xml:"redirect"`
 	Revisions []Revision `xml:"revision"`
 	Ns        uint64     `xml:"ns"`
 }
