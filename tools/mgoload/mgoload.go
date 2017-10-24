@@ -11,7 +11,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/dustin/go-wikiparse"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 )
 
 var proc = flag.Int("proc", 8, "How many processes to run.")
