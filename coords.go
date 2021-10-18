@@ -53,6 +53,25 @@ func dms(parts []string) (float64, error) {
 	return rv, err
 }
 
+func dm(parts []string) (float64, error) {
+	if len(parts) != 3 {
+		return 0, fmt.Errorf("Wrong number of elements: %#v", parts)
+	}
+	rv, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		return rv, err
+	}
+	f, err := strconv.ParseFloat(parts[1], 64)
+	if err != nil {
+		return rv, err
+	}
+	rv += f / 60.0
+	if parts[2] == "S" || parts[2] == "W" {
+		rv = -rv
+	}
+	return rv, err
+}
+
 func parseSexagesimal(parts []string) (Coord, error) {
 	if len(parts) < 8 {
 		return Coord{}, errNotSexagesimal
@@ -70,6 +89,33 @@ func parseSexagesimal(parts []string) (Coord, error) {
 	}
 
 	lon, err := dms(parts[4:8])
+
+	rv := Coord{
+		Lat: lat,
+		Lon: lon,
+	}
+
+	return rv, err
+}
+
+
+func parseSexagesimal2(parts []string) (Coord, error) {
+	if len(parts) < 6 {
+		return Coord{}, errNotSexagesimal
+	}
+	if parts[2] != "N" && parts[2] != "S" {
+		return Coord{}, errNotSexagesimal
+	}
+	if parts[5] != "E" && parts[5] != "W" {
+		return Coord{}, errNotSexagesimal
+	}
+
+	lat, err := dm(parts[0:3])
+	if err != nil {
+		return Coord{}, err
+	}
+
+	lon, err := dm(parts[3:6])
 
 	rv := Coord{
 		Lat: lat,
@@ -144,7 +190,10 @@ func ParseCoords(text string) (Coord, error) {
 
 	rv, err := parseSexagesimal(parts)
 	if err != nil {
-		rv, err = parseFloat(parts)
+		rv, err = parseSexagesimal2(parts)
+		if err != nil {
+			rv, err = parseFloat(parts)
+		}
 	}
 
 	if math.Abs(rv.Lat) > 90 {

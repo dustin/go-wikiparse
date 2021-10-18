@@ -141,6 +141,10 @@ var testdata = []testinput{
 		59,
 		"",
 	},
+	testinput{
+		"{{Coord|50|40|N|1|16|W|region:GB_type:isle|display=title, inline}}",
+		50.6666667, -1.266667,"",
+	},
 	// And this should fail dms, but coverage suggests it doesn't
 	/*
 		testinput{
