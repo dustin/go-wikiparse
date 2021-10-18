@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/couchbaselabs/go-couchbase"
+	"github.com/couchbase/go-couchbase"
 	"github.com/dustin/go-humanize"
 	"github.com/dustin/go-wikiparse"
 )
